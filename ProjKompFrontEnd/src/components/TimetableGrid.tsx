@@ -78,11 +78,15 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
 
       {/* Top row: Hour headers */}
       {hours.map((hour, hourIndex) => (
-        <div 
-          key={`header-${hour}`} 
-          className={`timetable-hour-header ${hourIndex === cols - 1 ? 'timetable-hour-header--last' : ''}`}
-        >
-          {hour}
+        <div className="timetable-hour-header-wrapper">
+          <div className ='timetable-hour-header-container'>
+            <div 
+              key={`header-${hour}`} 
+              className={`timetable-hour-header ${hourIndex === cols - 1 ? 'timetable-hour-header--last' : ''}`}
+            >
+              {hour}
+            </div>
+          </div>
         </div>
       ))}
 
@@ -90,16 +94,20 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
       {dayRows.map((row, rowIndex) => (
         <React.Fragment key={`row-${row.day}`}>
           {/* Day header for this row */}
-          <div className={`timetable-day-header ${rowIndex === rows - 1 ? 'timetable-day-header--last' : ''}`}>
-            <div>{row.day}</div>
-            {dayLabels[rowIndex] && (
-              <div className="timetable-day-header__term">
-                <span className="timetable-day-header__term-label">{dayLabels[rowIndex]?.label}</span>
-                {dayLabels[rowIndex]?.termNumber && (
-                  <span className="timetable-day-header__term-number">{dayLabels[rowIndex]?.termNumber}</span>
+          <div className="timetable-day-header-wrapper">
+            <div className="timetable-day-header-container">
+              <div className={`timetable-day-header ${rowIndex === rows - 1 ? 'timetable-day-header--last' : ''}`}>
+                <div>{row.day}</div>
+                {dayLabels[rowIndex] && (
+                  <div className="timetable-day-header__term">
+                    <span className="timetable-day-header__term-label">{dayLabels[rowIndex]?.label}</span>
+                    {dayLabels[rowIndex]?.termNumber && (
+                      <span className="timetable-day-header__term-number">{dayLabels[rowIndex]?.termNumber}</span>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Grid cells for this row */}

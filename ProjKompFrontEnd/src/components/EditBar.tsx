@@ -154,18 +154,8 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
     : "";
 
   return (
+    <div className="editbar-wrapper">
     <div className="tt-edit-panel">
-      <div className="editbar-top-row">
-        <Button
-          icon="pi pi-refresh"
-          rounded
-          outlined
-          className="tt-icon-btn tt-refresh-btn"
-          onClick={handleReplayDraft}
-          disabled={!draft}
-          aria-label="Przywroc dane z dysku"
-        />
-      </div>
       <div className="editbar-form">
         <div className="editbar-field">
           <label htmlFor="block-name">Nazwa przedmiotu</label>
@@ -188,22 +178,24 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
         </div>
 
         <div className="editbar-field">
-          <label htmlFor="block-hours">dlugosc: {draft?.hourSpan ?? "-"}</label>
-          <InputNumber
-            id="block-hours"
-            value={draft?.hourSpan ?? 1}
-            disabled={disabled}
-            onValueChange={(e) => handleFieldChange("hourSpan", Math.max(1, e.value ?? 1))}
-            min={1}
-            max={12}
-          />
-          <Slider
-            value={draft?.hourSpan ?? 1}
-            min={1}
-            max={12}
-            disabled={disabled}
-            onChange={(e) => handleFieldChange("hourSpan", Math.max(1, Number(e.value) || 1))}
-          />
+          {/* <div className="pre-slider-section"> */}
+            <label htmlFor="block-hours">długość: </label>
+              <InputNumber
+                id="block-hours"
+                value={draft?.hourSpan ?? 1}
+                disabled={disabled}
+                onValueChange={(e) => handleFieldChange("hourSpan", Math.max(1, e.value ?? 1))}
+                min={1}
+                max={12}
+              />
+            {/* </div> */}
+            <Slider
+              value={draft?.hourSpan ?? 1}
+              min={1}
+              max={12}
+              disabled={disabled}
+              onChange={(e) => handleFieldChange("hourSpan", Math.max(1, Number(e.value) || 1))}
+            />
         </div>
 
         <div className="editbar-field">
@@ -275,6 +267,18 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
           </div>
         </div>
 
+      </div>
+    </div>
+    <div className="editbar-top-row">
+        <Button
+          icon="pi pi-refresh"
+          rounded
+          outlined
+          className="tt-icon-btn tt-refresh-btn"
+          onClick={handleReplayDraft}
+          disabled={!draft}
+          aria-label="Przywroc dane z dysku"
+        />
       </div>
     </div>
   );

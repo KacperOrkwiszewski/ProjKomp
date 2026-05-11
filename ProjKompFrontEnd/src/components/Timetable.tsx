@@ -35,6 +35,7 @@ import { filterClassesForWeek, mapClassesToWeekDisplayRows, refreshScheduledBloc
 import { generatePdf } from "../utils/ExportUtils";
 import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId } from "../utils/GroupManager";
 import footerLogo from "../assets/logo-pl.png";
+import robotImage from "../assets/robot.png";
 import type { GroupInfo } from "./GroupSelector";
 
 type TimetableProps = {
@@ -612,17 +613,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         >
             <section className="tt-left-panel">
                 <div className="tt-prompt-row">
-                    <span className="tt-prompt-robot" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" className="tt-prompt-robot-icon" focusable="false">
-                            <path d="M12 3v2" />
-                            <path d="M8 7h8a2 2 0 0 1 2 2v6a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z" />
-                            <circle cx="10" cy="12" r="1" />
-                            <circle cx="14" cy="12" r="1" />
-                            <path d="M9.5 15h5" />
-                            <path d="M6 10H4" />
-                            <path d="M20 10h-2" />
-                        </svg>
-                    </span>
+                    <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
                     <InputText placeholder="Wpisz prompt" className="tt-prompt-input" />
                     <Button icon="pi pi-send" rounded text className="tt-icon-btn" />
                 </div>
@@ -680,7 +671,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         icon="pi pi-plus" 
                         text 
                         rounded 
-                        className="tt-icon-btn tt-chip-add-btn" 
+                        className="add-group-button" 
                         onClick={() => setShowGroupSelector(true)}
                     />
                     <div className="tt-plan-row-spacer" />
@@ -763,9 +754,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         style={{ originX: 1, originY: 0.5 }}
                         className="tt-right-panel"
                     >
-                        <div className="tt-right-panel-brand" aria-hidden="true">
-                            <img className="tt-right-panel-brand-image" src={footerLogo} alt="" />
-                        </div>
                         <EditBar
                             blockData={selectedBlock}
                             onSave={handleEditBlock}
@@ -803,6 +791,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                             ]}
                             onChange={(e) => setPdfSource(e.value)}
                             placeholder="Wybierz źródło"
+                            panelClassName="pdf-export-dropdown-panel"
                         />
                     </div>
 
