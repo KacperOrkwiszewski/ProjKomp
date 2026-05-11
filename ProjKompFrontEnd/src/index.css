@@ -27,6 +27,7 @@
 --text-on-accent: #f8fafc;
 --accent-primary: #4fb55a;
 --accent-primary-strong: #3a9f44;
+--accent-secondary: #0066cc;
 --accent-focus: rgba(186, 230, 253, 0.7);
 --accent-chip-bg: rgba(96, 165, 250, 0.2);
 --accent-chip-border: rgba(96, 165, 250, 0.4);
@@ -97,7 +98,6 @@ padding: 0;
 }
 
 body {
-font-family: "Montserrat", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 background: var(--bg-app);
 color: var(--text-main);
 transition: var(--transition-theme);
@@ -116,12 +116,11 @@ padding: 0;
 .tt-surface {
 display: flex;
 align-items: stretch;
-gap: 12px;
+gap: 1rem;
 }
 
 .tt-left-panel,
 .tt-right-panel {
-border: 1px solid var(--border-strong);
 background: linear-gradient(180deg, var(--surface-panel-alt) 0%, var(--surface-panel) 100%);
 box-shadow: inset 0 0 0 1px var(--surface-inner-stroke);
 transition: var(--transition-theme);
@@ -130,17 +129,17 @@ transition: var(--transition-theme);
 .tt-left-panel {
 flex: 1 1 auto;
 min-width: 0;
-padding: 10px;
+padding: 2rem;
 }
 
 .tt-right-panel {
-flex: 0 0 252px;
-width: 252px;
-max-width: 252px;
-padding: 8px;
+flex: 0 0 20rem;
+width: 20rem;
+max-width: 20rem;
+padding: 0.5rem;
 display: flex;
 flex-direction: column;
-justify-content: flex-end;
+justify-content: space-between;
 overflow-x: hidden;
 overflow-y: auto;
 position: relative;
@@ -168,10 +167,16 @@ transform: none;
 }
 
 .tt-prompt-row {
-display: grid;
-grid-template-columns: 40px minmax(0, 1fr) 40px;
-gap: 10px;
-margin-bottom: 10px;
+display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: space-evenly;
+gap: 0.5rem;
+margin-bottom: 2rem;
+margin-left: 3.5rem;
+padding: 1rem 0.5rem;
+background-color: var(--surface-main);
+border-radius: 1rem;
 }
 
 .tt-prompt-input,
@@ -179,10 +184,11 @@ margin-bottom: 10px;
 background: var(--surface-input);
 border: 1px solid var(--border-soft);
 color: var(--text-main);
-height: 40px;
-font-size: 13px;
-border-radius: 12px;
-padding: 0 14px;
+height: 3.5rem;
+width: 90%;
+font-size: 2rem;
+border-radius: 2rem;
+padding: 0 1rem;
 transition: var(--transition-theme);
 }
 
@@ -199,15 +205,16 @@ box-shadow: 0 0 0 2px var(--accent-focus);
 .tt-plan-row {
 display: flex;
 align-items: center;
-gap: 10px;
-margin-bottom: 10px;
+gap: 1.5rem;
+margin-bottom: 0.5rem;
 color: var(--text-soft);
-font-size: 13px;
+font-size: 1.5rem;
 font-weight: 500;
+margin-left: 3.5rem;
 }
 
 .tt-plan-tags-row {
-margin-bottom: 10px;
+margin-bottom: 1rem;
 flex-wrap: wrap;
 }
 
@@ -277,7 +284,6 @@ background: rgba(255, 255, 255, 0.2);
 }
 
 .tt-chip-add-btn {
-margin-left: 2px;
 flex: 0 0 auto;
 }
 
@@ -298,20 +304,20 @@ pointer-events: none;
 }
 
 .tt-mail-toggle-track {
-width: 44px;
-height: 24px;
-border-radius: 999px;
-border: 1px solid var(--border-soft);
+width: 3.5rem;
+height: 2rem;
+border-radius: 4rem;
+border: 0.1rem solid var(--border-soft);
 background: var(--surface-input);
-padding: 2px;
+padding: 0.2rem;
 display: inline-flex;
 align-items: center;
 transition: var(--transition-theme);
 }
 
 .tt-mail-toggle-thumb {
-width: 18px;
-height: 18px;
+width: 1.5rem;
+height: 1.5rem;
 border-radius: 50%;
 background: var(--text-muted);
 transform: translateX(0);
@@ -324,16 +330,32 @@ border-color: var(--accent-primary);
 }
 
 .tt-mail-toggle input:checked + .tt-mail-toggle-track .tt-mail-toggle-thumb {
-transform: translateX(20px);
+transform: translateX(1.5rem);
 background: var(--text-on-accent);
 }
 
 .tt-icon-btn.p-button {
-width: 2rem;
-height: 2rem;
+width: 3rem;
+height: 3rem;
 color: var(--text-soft);
 border-color: var(--border-soft);
 transition: var(--transition-theme);
+}
+
+.add-group-button{
+  width: 2rem;
+  height: 2rem;
+  background-color: var(--accent-secondary);
+  border-radius: 0.5rem;
+  color: var(--text-on-accent);
+}
+.add-group-button .pi{
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.tt-icon-btn .pi {
+  font-size: 1.5rem;
 }
 
 .tt-refresh-btn.p-button {
@@ -343,48 +365,38 @@ color: var(--text-main);
 
 .tt-prompt-link.p-button {
 background: var(--surface-input);
-border: 1px solid var(--border-soft);
+border: 0.1rem solid var(--border-soft);
 }
 
 .tt-prompt-robot {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-width: 40px;
-height: 40px;
-color: var(--text-soft);
-border: none;
-background: transparent;
+  height: 2.5rem;
+  width: auto;
+  filter: var(--footer-logo-filter);
 }
 
-.tt-prompt-robot-icon {
-width: 22px;
-height: 22px;
-fill: none;
-stroke: currentColor;
-stroke-width: 1.8;
-stroke-linecap: round;
-stroke-linejoin: round;
-}
-
-.timetable-unified-container {
-  position: relative;
-  background: var(--surface-main);
-  border: 1px solid var(--border-soft);
-  border-radius: 0;
-  overflow: visible;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, grid-template-rows 260ms ease, height 260ms ease;
-  box-sizing: border-box;
-}
 
 .timetable-corner-cell {
-  background: var(--surface-panel-alt);
-  border-right: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.timetable-hour-header-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+}
+
+.timetable-hour-header-container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--surface-main);
+  margin-bottom: 0.7rem;
+  border: 0.2em solid var(--surface-main);
+  border-right: 0;
+  border-left: 0;
 }
 
 .timetable-hour-header {
@@ -392,9 +404,12 @@ stroke-linejoin: round;
   align-items: center;
   justify-content: center;
   background: var(--surface-panel-alt);
-  border-right: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 10px;
+  border-right: 0.1rem solid var(--border-soft);
+  border-radius: 2rem;
+  border-bottom: 0.1rem solid var(--border-soft);
+  width: 7rem;
+  height: 3rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-main);
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
@@ -404,19 +419,39 @@ stroke-linejoin: round;
   border-right: none;
 }
 
+.timetable-day-header-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.7rem;
+}
+.timetable-day-header-container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--surface-main);
+  margin-right: 0.7rem;
+  border: 0.2em solid var(--surface-main);
+  border-top: 0;
+  border-bottom: 0;
+}
+
 .timetable-day-header {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--surface-panel-alt);
-  border-right: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 10px;
+  border-right: 0.1rem solid var(--border-soft);
+  border-bottom: 0.1rem solid var(--border-soft);
+  border-radius: 2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-main);
-  min-width: 0;
-  padding: 2px 4px;
+  width: 3rem;
+  height: 3rem;
+  padding: 0.2rem 0.4rem;
   overflow: hidden;
   text-align: center;
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
@@ -426,7 +461,7 @@ stroke-linejoin: round;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: 0.1rem;
   line-height: 1;
 }
 
@@ -448,7 +483,7 @@ stroke-linejoin: round;
 }
 
 .timetable-cell {
-  background: var(--surface-grid-cell);
+  background: var(--surface-panel-alt);
   border-right: 1px solid var(--border-grid-subtle);
   border-bottom: 1px solid var(--border-grid-subtle);
   transition: var(--transition-theme);
@@ -489,13 +524,12 @@ stroke-linejoin: round;
 
 .tt-board {
 flex: 1 1 auto;
-min-width: 0;
-  border: 1px solid var(--border-soft);
-  background: var(--surface-main);
+  min-width: 0;
   padding: 0;
+  margin-top: 2em;
   overflow: visible;
   transition: width 240ms ease, background-color 0.3s ease, border-color 0.3s ease;
-will-change: width;
+  will-change: width;
 }
 
 .tt-board--edit-mode {
@@ -517,7 +551,8 @@ will-change: width;
 }
 
 .tt-bottom-row {
-margin-top: 8px;
+margin-top: 2rem;
+margin-bottom: 1rem;
 display: flex;
 align-items: center;
 justify-content: flex-end;
@@ -534,40 +569,44 @@ transform: translateX(-50%);
 }
 
 .tt-date-pill {
-min-width: 122px;
-height: 34px;
+width: 14rem;
+height: 4rem;
 display: inline-flex;
 align-items: center;
 justify-content: center;
 background: var(--surface-input);
-font-size: 29px;
+font-size: 2rem;
+border-radius: 1rem;
 font-weight: 700;
-padding: 0 10px;
 color: var(--text-heading);
 transition: var(--transition-theme);
 }
 
 .tt-download-btn.p-button {
-background: var(--accent-primary);
-border-color: var(--accent-primary);
-color: var(--text-on-accent);
-font-weight: 700;
-height: 34px;
-padding-inline: 18px;
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  height: 3.5rem;
+  width: 14rem;
+  padding-inline: 18px;
+  font-size: 1.5rem;
+}
+
+.tt-download-btn.p-button .pi{
+  font-size: 1.5rem;
 }
 
 .tt-download-btn.p-button:hover {
-background: var(--accent-primary-strong);
-border-color: var(--accent-primary-strong);
+  background: var(--accent-primary-strong);
+  border-color: var(--accent-primary-strong);
 }
 
 .tt-active-count {
-margin-top: 8px;
 color: var(--text-muted);
-font-size: 12px;
+font-size: 1.5rem;
+margin-left: 3.5rem;
 }
-
-
 
 .timetable-day-row-weekend {
 transform-origin: top;
@@ -577,46 +616,45 @@ transform-origin: top;
   transform-origin: top;
 }
 
+.editbar-wrapper{
+  position: relative;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
 .editbar-form {
-display: flex;
-flex-direction: column;
-gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-size: 40px;
 }
 
 .editbar-top-row {
-display: flex;
-justify-content: flex-end;
-align-items: center;
-margin-bottom: -7px;
+  display: flex;
+  justify-content: center;
 }
 
 .tt-edit-panel {
-height: auto;
-min-height: 0;
-width: 100%;
-background: var(--surface-main);
-border: 1px solid var(--border-soft);
-padding: 8px;
-transition: var(--transition-theme);
-}
-
-.tt-right-panel-brand {
-display: flex;
-align-items: center;
-justify-content: center;
-flex: 1 1 auto;
-min-height: 0;
-padding: 12px 8px;
-}
-
-.tt-right-panel-brand-image {
-display: block;
-width: clamp(68px, 62%, 138px);
-max-height: min(16vh, 132px);
-height: auto;
-object-fit: contain;
-filter: var(--footer-logo-filter);
-opacity: 0.9;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  background: var(--surface-main);
+  border: 1px solid var(--border-soft);
+  padding: 0.5rem;
+  transition: var(--transition-theme);
 }
 
 .editbar-field {
@@ -626,7 +664,7 @@ gap: 0.3rem;
 }
 
 .editbar-field label {
-font-size: 12px;
+font-size: 1.2rem;
 color: var(--text-main);
 font-weight: 600;
 }
@@ -637,19 +675,22 @@ font-weight: 600;
 background: var(--surface-input);
 border-color: var(--border-soft);
 color: var(--text-main);
-border-radius: 6px;
-font-size: 12px;
+border-radius: 0.5rem;
+font-size: 1rem;
 transition: var(--transition-theme);
 }
 
+.tt-edit-panel .p-inputnumber-input{
+  height: 2rem;
+  width: 2.6rem;
+}
 .tt-edit-panel .p-inputtextarea {
 resize: none;
+height: 5rem;
 }
 
 .tt-edit-panel #block-extra {
-min-height: 1.95rem;
-height: 1.95rem;
-max-height: 1.95rem;
+height: 5rem;
 padding-top: 0.425rem;
 padding-bottom: 0.425rem;
 line-height: 1.1rem;
@@ -664,7 +705,11 @@ padding-block: 0.43rem;
 
 .tt-edit-panel .p-slider {
 background: var(--surface-input);
-height: 6px;
+height: 0.5rem;
+width: 90%;
+margin-top: 0.5rem;
+margin-left:auto;
+margin-right: auto;
 }
 
 .tt-edit-panel .p-slider .p-slider-range {
@@ -685,23 +730,21 @@ gap: 0.7rem;
 .tt-term-grid {
 display: grid;
 grid-template-columns: repeat(5, minmax(0, 1fr));
-gap: 7px 8px;
+gap: 0.5rem;
 }
 
 .tt-term-cell {
 position: relative;
-height: 28px;
+height: 2rem;
 background: var(--surface-input);
 border: 1px solid var(--border-soft);
 color: var(--text-main);
-border-radius: 8px;
-font-size: 12px;
+border-radius: 0.5rem;
+font-size: 1rem;
 font-weight: 600;
-letter-spacing: 0.2px;
 display: inline-flex;
 align-items: center;
 justify-content: flex-start;
-padding: 0 8px;
 text-transform: lowercase;
 transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
 cursor: pointer;
@@ -710,8 +753,8 @@ cursor: pointer;
 .tt-term-cell::after {
 content: "";
 margin-left: auto;
-width: 14px;
-height: 14px;
+width: 1rem;
+height: 1rem;
 border-radius: 4px;
 border: 1px solid var(--border-soft);
 background: var(--surface-panel-alt);
@@ -759,9 +802,7 @@ align-items: center;
 display: grid;
 grid-template-columns: minmax(0, 1fr);
 align-items: center;
-gap: 8px;
-width: 100%;
-justify-items: stretch;
+width: 8rem;
 }
 
 .tt-color-controls .p-colorpicker {
@@ -776,32 +817,21 @@ width: 2rem;
 height: 2rem;
 }
 
-.editbar-bin-separator {
-height: 1px;
-background: var(--border-soft);
-margin: 12px 0;
-}
-
-.editbar-bin-section {
-display: flex;
-flex-direction: column;
-gap: 0.5rem;
-}
 
 .editbar-bin {
-position: relative;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 6px;
-padding: 16px 12px;
-background: var(--surface-input);
-border: 2px dashed var(--border-soft);
-border-radius: 8px;
-cursor: grab;
-transition: all 200ms ease;
-min-height: 80px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--surface-input);
+  border: 2px dashed var(--border-soft);
+  border-radius: 1rem;
+  cursor: grab;
+  transition: all 200ms ease;
+  min-height: 80px;
 }
 
 .editbar-bin:hover {
@@ -847,16 +877,17 @@ font-weight: 700;
 }
 
 .tt-class-block {
-	border: 1px solid var(--class-border);
-box-sizing: border-box;
-transition:
-left 240ms ease,
-top 240ms ease,
-width 240ms ease,
-height 240ms ease,
-box-shadow 200ms ease,
-filter 200ms ease;
-will-change: left, top, width, height, transform;
+	border: 0.1rem solid var(--class-border);
+  box-sizing: border-box;
+  border-radius: 1em;
+  transition:
+  left 240ms ease,
+  top 240ms ease,
+  width 240ms ease,
+  height 240ms ease,
+  box-shadow 200ms ease,
+  filter 200ms ease;
+  will-change: left, top, width, height, transform;
 }
 
 .tt-class-sub {
@@ -869,8 +900,8 @@ white-space: pre-line;
 }
 
 .tt-nav-btn.p-button {
-width: 34px;
-height: 34px;
+width: 3.5rem;
+height: 3.5rem;
 border-color: var(--border-soft);
 color: var(--text-main);
 }
@@ -897,9 +928,10 @@ border-color: #ad1f1f;
 .pdf-export-modal.p-dialog {
   background: var(--surface-panel);
   color: var(--text-main);
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
+  /* border: 1px solid var(--border-soft); */
+  border-radius: 1rem;
   box-shadow: var(--shadow-floating);
+  font-size: 1.5rem;
 }
 
 .pdf-export-modal.p-dialog .p-dialog-header,
@@ -948,19 +980,18 @@ border-color: #ad1f1f;
 .pdf-export-dialog {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 8px 0;
+  gap: 1rem;
+  padding: 0.5rem 0;
 }
 
 .pdf-export-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.5rem;
 }
-
 .pdf-export-field label {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 1rem;
   color: var(--text-main);
 }
 
@@ -975,22 +1006,49 @@ border-color: #ad1f1f;
 .pdf-export-field .p-dropdown:hover,
 .pdf-export-field .p-inputtext:hover {
   border-color: var(--border-strong);
+  background: var(--surface-input);
 }
 
 .pdf-export-field .p-dropdown:focus,
 .pdf-export-field .p-inputtext:focus {
   border-color: var(--accent-focus);
-  box-shadow: 0 0 0 2px var(--accent-focus);
+  box-shadow: 0 0 0 0.2rem var(--accent-focus);
+}
+
+.pdf-export-dropdown-panel {
+  background: var(--surface-input);
+  border: 1px solid var(--border-soft);
+}
+
+
+.pdf-export-dropdown-panel .p-dropdown-item {
+  background: transparent;
+  color: var(--text-main);
+}
+
+.pdf-export-dropdown-panel .p-dropdown-item.p-focus {
+  background: var(--surface-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.pdf-export-dropdown-panel .p-dropdown-item.p-highlight.p-focus {
+  background: var(--surface-hover) !important;
 }
 
 .pdf-export-field .p-inputswitch {
-  width: 44px;
-  height: 23px;
+  width: 3.5rem;
+  height: 2rem;
+  border-radius: 4rem;
+  background: var(--surface-input);
+  display: inline-flex;
+  align-items: center;
+  transition: var(--transition-theme);
 }
+
 
 .pdf-export-field .p-inputswitch .p-inputswitch-slider {
   background: var(--surface-input);
-  border: 1px solid var(--border-soft);
+  border: 0.1rem solid var(--border-soft);
   transition: var(--transition-theme);
 }
 
@@ -1001,25 +1059,30 @@ border-color: #ad1f1f;
 
 .pdf-export-field .p-inputswitch .p-inputswitch-input:checked + .p-inputswitch-slider::before {
   background: var(--text-on-accent);
-  transform: translateX(20px);
+  transform: translateX(1.5rem);
 }
 
 .pdf-export-field .p-inputswitch .p-inputswitch-slider::before {
-  width: 18px;
-  height: 18px;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transform: translateX(0);
+  transition: transform 180ms ease, background-color 180ms ease;
   top: 50%;
-  left: 2.5px;
-  margin-top: -9px;
+  left: 0.2rem;
+  margin-top: -0.775rem;
   background: var(--text-soft);
   transition: transform 0.2s ease, background-color 0.2s ease;
   box-sizing: border-box;
   position: absolute;
 }
 
+
 .pdf-export-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .pdf-export-actions .p-button {
@@ -1043,6 +1106,7 @@ border-color: #ad1f1f;
   border-radius: 14px;
   box-shadow: var(--shadow-floating);
   overflow: hidden;
+  
 }
 
 .group-selector-dialog.p-dialog .p-dialog-header,
@@ -1122,15 +1186,13 @@ flex-direction: column;
 }
 
 .tt-right-panel {
-flex: 0 0 auto;
-max-width: 100%;
-width: 100%;
-justify-content: flex-start;
+  position: absolute;
+  flex: 0 0 auto;
+  max-width: 100%;
+  width: 100%;
+  justify-content: flex-start;
 }
 
-.tt-right-panel-brand {
-padding: 8px;
-}
 
 .tt-right-panel-brand-image {
 width: clamp(72px, 24vw, 124px);

@@ -11,6 +11,9 @@ import { motion } from "framer-motion";
 import { hoverTapScale } from "./utils/MotionUtils";
 import "./App.css";
 
+import "../src/assets/TitilliumWeb-Bold-normal.js";
+import "../src/assets/TitilliumWeb-Regular-normal.js";
+
 function useWindowSize() {
   const [size, setSize] = useState({
     width: window.innerWidth,
@@ -112,14 +115,11 @@ function AppContent() {
           <span className="app-avatar" aria-hidden="true" />
         </div>
       </header>
-
-      <main className="app-main">
-        <Timetable
-          gridProps={gridProps}
-          theme={theme}
-          onEditBarVisibilityChange={setIsEditBarVisible}
-        />
-      </main>
+      <Timetable
+        gridProps={gridProps}
+        theme={theme}
+        onEditBarVisibilityChange={setIsEditBarVisible}
+      />
 
       <footer className="app-footer">
         <div className="app-footer-logo" aria-label="Logo Politechniki Łódzkiej">
@@ -128,7 +128,12 @@ function AppContent() {
         <div className="app-footer-content">
           <p>Projekt kompetencyjny</p>
           <p>AI powered Class Plan for Lodz University of Technology</p>
-          <p>Wykonawcy: Kacper Orkwiszewski, Krzysztof Wojtal, Stanislaw Jaworski, Witold Struminski</p>
+          <p>Opiekun projektu: dr. inż Zbigniew Chaniecki</p>
+          <p>Wykonawcy:</p>
+          <p>Kacper Orkwiszewski</p>
+          <p>Krzysztof Wojtal</p>
+          <p>Stanislaw Jaworski</p>
+          <p>Witold Struminski</p>
         </div>
       </footer>
     </div>
