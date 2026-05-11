@@ -1,0 +1,125 @@
+{
+  "name": "6I IO-1",
+  "classes": [
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Programowanie sieciowe.1",
+        "extra": "i24 110"
+      },
+      "reference": "6072e113498f614a",
+      "color": 51914,
+      "start": 10,
+      "length": 2,
+      "day": 0
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8],
+        "name": "Projektowanie obiektowe - wzorce projektowe",
+        "extra": "i24 B19 403"
+      },
+      "reference": "78965d7934ddf097",
+      "color": 51914,
+      "start": 10,
+      "length": 2,
+      "day": 0
+    },
+    {
+      "info": {
+        "terms": [7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Programowanie sieciowe.1",
+        "extra": "E 5"
+      },
+      "reference": "6072e113498f614a",
+      "color": 16758896,
+      "start": 11,
+      "length": 2,
+      "day": 1
+    },
+    {
+      "info": {
+        "terms": [9, 10, 11],
+        "name": "Projektowanie obiektowe - wzorce projektowe",
+        "extra": "E 5"
+      },
+      "reference": "78965d7934ddf097",
+      "color": 16760444,
+      "start": 11,
+      "length": 2,
+      "day": 1
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Podstawy konteneryzacji i architektury mikroserwisów",
+        "extra": "E 1"
+      },
+      "reference": "fae6614d5d35672e",
+      "color": 16758896,
+      "start": 8,
+      "length": 2,
+      "day": 2
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Podstawy konteneryzacji i architektury mikroserwisów",
+        "extra": "i24 107"
+      },
+      "reference": "fae6614d5d35672e",
+      "color": 52428,
+      "start": 10,
+      "length": 2,
+      "day": 2
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Zarządzanie projektami informatycznymi",
+        "extra": "i24 B19 406"
+      },
+      "reference": "3b193947590d7e8b",
+      "color": 51914,
+      "start": 8,
+      "length": 2,
+      "day": 3
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Projektowanie dynamicznych stron www",
+        "extra": "i24 311"
+      },
+      "reference": "3d184347b77253c9",
+      "color": 52428,
+      "start": 10,
+      "length": 2,
+      "day": 3
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Projektowanie dynamicznych stron www",
+        "extra": "E 6"
+      },
+      "reference": "3d184347b77253c9",
+      "color": 16758896,
+      "start": 12,
+      "length": 2,
+      "day": 3
+    },
+    {
+      "info": {
+        "terms": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "name": "Zarządzanie projektami informatycznymi",
+        "extra": "k22 B18 A3"
+      },
+      "reference": "3b193947590d7e8b",
+      "color": 16760444,
+      "start": 8,
+      "length": 4,
+      "day": 4
+    }
+  ]
+}

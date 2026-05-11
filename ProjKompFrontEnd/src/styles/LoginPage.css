@@ -1,0 +1,144 @@
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Titillium Web', sans-serif;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+}
+
+.login-box {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 40px 30px;
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.login-header p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.login-content {
+  margin: 20px 0;
+}
+
+.login-subtitle {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.login-button {
+  width: 100% !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  margin-bottom: 20px !important;
+  transition: all 0.3s ease !important;
+}
+
+.microsoft-button {
+  background: linear-gradient(90deg, #0078d4 0%, #0063b1 100%) !important;
+  border: none !important;
+}
+
+.microsoft-button:hover {
+  background: linear-gradient(90deg, #0063b1 0%, #004578 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 120, 212, 0.3) !important;
+}
+
+.login-divider {
+  position: relative;
+  margin: 30px 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.login-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #ddd;
+}
+
+.login-divider {
+  background: white;
+  padding: 0 10px;
+  display: inline-block;
+  position: relative;
+  width: 100%;
+}
+
+.login-info {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.6;
+  margin: 20px 0 0 0;
+}
+
+.login-footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  color: #999;
+}
+
+.login-footer p {
+  margin: 0;
+}
+
+/* Dark theme support */
+[data-theme='dark'] .login-page {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+[data-theme='dark'] .login-box {
+  background: #2d2d44;
+  color: #fff;
+}
+
+[data-theme='dark'] .login-header h1,
+[data-theme='dark'] .login-header p,
+[data-theme='dark'] .login-subtitle,
+[data-theme='dark'] .login-info {
+  color: #e0e0e0;
+}
+
+[data-theme='dark'] .login-divider {
+  color: #666;
+}
+
+[data-theme='dark'] .login-divider::before {
+  background: #444;
+}
+
+[data-theme='dark'] .login-footer {
+  border-top-color: #444;
+  color: #666;
+}
