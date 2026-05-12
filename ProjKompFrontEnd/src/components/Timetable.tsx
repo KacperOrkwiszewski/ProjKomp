@@ -94,6 +94,28 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const originalBlocksRef = useRef<BlockData[]>([]);
     const toast = useRef<Toast>(null);
 
+    //bin
+    const [isDragOverBin, setIsDragOverBin] = useState(false);
+    const binRef = useRef<HTMLDivElement | null>(null);
+
+    const handleBinDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragOverBin(true);
+      };
+    
+      const handleBinDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        if (event.target === binRef.current) {
+          setIsDragOverBin(false);
+        }
+      };
+    
+      const handleBinDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragOverBin(false);
+      };
+
     // Grupy - state
     const [selectedGroups, setSelectedGroupsState] = useState<GroupInfo[]>([]);
     const [activeGroupId, setActiveGroupIdState] = useState<string | null>(null);
@@ -548,7 +570,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         setSelectedBlockId(null);
     };
 
-    const handleBlockDrop = (blockId: number, newX: number, newY: number, hourSpan: number, dragGridProps: GridProps = responsiveGridProps) => {
+    const handleBlockDrop = (blockId: number, newX: number, newY: number, hourSpan: number, dragGridProps: GridProps = responsiveGridProps,cursorX:number,cursorY:number) => {
         if (!isEditModeEnabled) {
             return { x: newX, y: newY };
         }
@@ -561,22 +583,37 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         const blockHeight = Math.max(1, Math.round(cellSizeForDrag.y) + BLOCK_HEIGHT_ADJUST);
         const centerX = newX + blockWidth / 2;
         const centerY = newY + blockHeight / 2;
+        console.log("binbin center",centerX,centerY)
+        console.log("binbin cursor",cursorX,cursorY)
 
         // Check if block is dropped in bin area below calendar (use center point)
-        if (isBinArea(centerX, centerY, dragGridProps)){
-            let newData = removeBlock(blocksDataRef.current,blockId);
-            if(!isNewBlockPresent(newData)){
-                newData = SpawnNewBlock(newData,dragGridProps.Bin);
+        const binRect = binRef.current?.getBoundingClientRect();
+        const gridRect = boardRef.current?.getBoundingClientRect();
+
+        if (binRect && gridRect) {
+            const isInsideBin =
+                cursorX + gridRect.left >= binRect.left &&
+                cursorX + gridRect.left <= binRect.right &&
+                cursorY + gridRect.top >= binRect.top &&
+                cursorY + gridRect.top <= binRect.bottom;
+            if (isInsideBin) {
+                let newData = removeBlock(blocksDataRef.current, blockId);
+                if (!isNewBlockPresent(newData)) {
+                    newData = SpawnNewBlock(newData, dragGridProps.Bin);
+                }
+                applyBlocksState(newData);
+                setSelectedBlockId(null);
+                toast.current?.show({
+                    severity: "info",
+                    summary: "Przeniesiono do kosza",
+                    detail: `Blok #${blockId} trafil do binu.`,
+                    life: 1200,
+                });
+                return {
+                    x: getNewBlockPosition(dragGridProps.Bin).x,
+                    y: getNewBlockPosition(dragGridProps.Bin).y,
+                };
             }
-            applyBlocksState(newData);
-            setSelectedBlockId(null);
-            toast.current?.show({
-                severity: "info",
-                summary: "Przeniesiono do kosza",
-                detail: `Blok #${blockId} trafil do binu.`,
-                life: 1200,
-            });
-            return {x: getNewBlockPosition(dragGridProps.Bin).x, y: getNewBlockPosition(dragGridProps.Bin).y};
         }
 
         // Removed ambiguous "dropped on right side" heuristic; explicit element-rect or bottom bin used above.
@@ -737,6 +774,29 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
                         <Button label="pobierz pdf" icon="pi pi-download" className="tt-download-btn" onClick={() => setShowPdfDialog(true)} />
                     </div>
+                )}
+                {isEditModeEnabled && (
+                    <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
+                    <motion.div
+                        layout
+                        variants={binPanelVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        ref={binRef}
+                        className={`editbar-bin ${isDragOverBin ? "is-drag-over" : ""}`.trim()}
+                        style={{
+                        position: "relative",
+                        }}
+                        onDragOver={handleBinDragOver}
+                        onDragLeave={handleBinDragLeave}
+                        onDrop={handleBinDrop}
+                    >
+                        <i className="pi pi-trash editbar-bin-icon"></i>
+                        <span className="editbar-bin-title">Kosz</span>
+                        <span className="editbar-bin-subtitle">upuść blok, aby usunąć</span>
+                    </motion.div>
+                    </AnimatePresence>
                 )}
 
                 {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
