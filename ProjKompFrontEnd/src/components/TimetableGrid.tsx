@@ -17,8 +17,8 @@ type TimetableGridProps = GridProps & {
 };
 
 const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, gridWidth, rowHeights, StartPoint, Bin, showBin = true, dayLabels = [] }) => {
-  const [isDragOverBin, setIsDragOverBin] = useState(false);
-  const binRef = useRef<HTMLDivElement | null>(null);
+  
+  
   const cellSize = { x: gridWidth / cols, y: gridHeight / rows };
   const weekdays = ["PON", "WT", "ŚR", "CZW", "PT"];
   const formatTime = (hour: number, minute: number) => `${hour}:${String(minute).padStart(2, "0")}`;
@@ -40,24 +40,6 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
   // CSS Grid template: first row = header, first col = days, rest = grid cells
   const gridTemplateRows = `${headerHeight}px ${dayRows.map((row) => `${row.heightPx}px`).join(" ")}`;
   const gridTemplateColumns = `50px repeat(${cols}, ${cellSize.x}px)`;
-
-  const handleBinDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragOverBin(true);
-  };
-
-  const handleBinDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    if (event.target === binRef.current) {
-      setIsDragOverBin(false);
-    }
-  };
-
-  const handleBinDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragOverBin(false);
-  };
 
   return (
     <motion.div
@@ -129,34 +111,6 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
           })}
         </React.Fragment>
       ))}
-
-      {showBin && (
-        <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
-          <motion.div
-            layout
-            variants={binPanelVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            ref={binRef}
-            className={`editbar-bin ${isDragOverBin ? "is-drag-over" : ""}`.trim()}
-            style={{
-              position: "absolute",
-              width: Bin.width,
-              height: Bin.height,
-              left: Bin.StartPoint.x,
-              top: Bin.StartPoint.y,
-            }}
-            onDragOver={handleBinDragOver}
-            onDragLeave={handleBinDragLeave}
-            onDrop={handleBinDrop}
-          >
-            <i className="pi pi-trash editbar-bin-icon"></i>
-            <span className="editbar-bin-title">Kosz</span>
-            <span className="editbar-bin-subtitle">upuść blok, aby usunąć</span>
-          </motion.div>
-        </AnimatePresence>
-      )}
     </motion.div>
   );
 };

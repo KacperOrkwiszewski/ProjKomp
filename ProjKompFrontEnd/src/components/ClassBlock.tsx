@@ -12,7 +12,7 @@ import {
 } from "../utils/MotionUtils";
 
 type BlockProps = {
-  handleDrop: (blockId: number, x: number, y: number, hourSpan: number, gridProps: GridProps) => {x: number, y: number};
+  handleDrop: (blockId: number, x: number, y: number, hourSpan: number, gridProps: GridProps,cursorX:number,cursorY:number) => {x: number, y: number};
   handlePickup: (blockId: number, hourSpan: number) => void;
   blockData: BlockData;
   gridProps: GridProps;
@@ -65,6 +65,9 @@ export default function Block({
 
     const startX = e.pageX - position.x;
     const startY = e.pageY - position.y;
+
+    const cursorOffsetX = e.nativeEvent.offsetX;
+    const cursorOffsetY = e.nativeEvent.offsetY;
     const dragThreshold = 5;
     let didDrag = false;
 
@@ -90,6 +93,8 @@ export default function Block({
     const handleMouseUp = (e: MouseEvent) => {
       const finalX = e.pageX - startX;
       const finalY = e.pageY - startY;
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
 
       if (!didDrag) {
         handlePickup(blockId, hourSpan);
@@ -97,10 +102,9 @@ export default function Block({
         document.removeEventListener("mouseup", handleMouseUp);
         return;
       }
-
       setIsDragging(false);
       handlePickup(blockId, hourSpan);
-      setPosition(handleDrop(blockId, finalX, finalY, hourSpan, gridProps));
+      setPosition(handleDrop(blockId, finalX, finalY, hourSpan, gridProps,cursorX,cursorY));
       
 
       document.removeEventListener("mousemove", handleMouseMove);
