@@ -15,6 +15,8 @@
 .app-topbar {
   height: 9rem;
   background: var(--surface-topbar-gradient);
+  border: 0.1rem solid var(--border-soft);
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -40,8 +42,8 @@
 }
 
 .app-theme-toggle {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   border: 0.1rem solid var(--border-soft);
   background: var(--surface-elevated);
@@ -49,12 +51,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.5rem;
   cursor: pointer;
   transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
 .app-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   border: 0.1rem solid var(--border-soft);
   font-size: 1.5rem;
   background: transparent;
@@ -65,6 +71,11 @@
   padding: 0 14px;
   cursor: pointer;
   transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.app-login-btn .pi{
+  font-size: 1.5rem;
+
 }
 
 .app-logout-btn {
@@ -93,27 +104,29 @@
   border-color: var(--border-strong);
 }
 
-.app-avatar {
+/* .app-avatar {
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
   display: inline-block;
   background: var(--avatar-gradient);
   border: 0.1rem solid var(--avatar-border);
-}
+} */
 
-.app-main {
+/* .app-main {
   margin-top: 10px;
   border: 1px solid var(--border-strong);
   background: var(--surface-main-gradient);
   box-shadow: inset 0 0 0 1px var(--surface-inner-stroke);
   padding: 12px;
   transition: background-color 0.3s ease, border-color 0.3s ease;
-}
+} */
 
 .app-footer {
   margin-top: 3rem;
   background: var(--surface-main-gradient);
+  border: 0.1rem solid var(--border-soft);
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -76,7 +76,7 @@ function AppContent() {
     rowHeights: [1, 1, 1, 1, 1],
     StartPoint: { x: 50, y: headerHeight },
     Bin: {
-      StartPoint: { x: 50 + gridWidth - 230, y: gridHeight + headerHeight + 18 },
+      StartPoint: { x: gridWidth - 230, y: gridHeight + headerHeight + 18 },
       height: 62,
       width: 230,
     } 
@@ -109,10 +109,11 @@ function AppContent() {
             </>
           ) : (
             <motion.button type="button" className="app-login-btn" onClick={login} {...hoverTapScale}>
+              
+              <i className="pi pi-user"></i>
               Logowanie
             </motion.button>
           )}
-          <span className="app-avatar" aria-hidden="true" />
         </div>
       </header>
       <Timetable

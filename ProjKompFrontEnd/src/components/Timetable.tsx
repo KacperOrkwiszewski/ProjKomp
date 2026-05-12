@@ -615,7 +615,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 <div className="tt-prompt-row">
                     <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
                     <InputText placeholder="Wpisz prompt" className="tt-prompt-input" />
-                    <Button icon="pi pi-send" rounded text className="tt-icon-btn" />
+                    <Button icon="pi pi-eject eject-send-button" rounded text className="tt-icon-btn" />
                 </div>
 
                 <div className="tt-plan-row">

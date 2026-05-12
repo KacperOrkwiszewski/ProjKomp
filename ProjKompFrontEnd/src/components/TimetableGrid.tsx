@@ -151,7 +151,7 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
             onDragLeave={handleBinDragLeave}
             onDrop={handleBinDrop}
           >
-            <span className="editbar-bin-icon">🗑️</span>
+            <i className="pi pi-trash editbar-bin-icon"></i>
             <span className="editbar-bin-title">Kosz</span>
             <span className="editbar-bin-subtitle">upuść blok, aby usunąć</span>
           </motion.div>
