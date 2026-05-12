@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
+html {
+    font-size: 1vw;
+}
+
 :root {
 --transition-theme: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 --bg-app: #0f172a;
@@ -159,7 +163,6 @@ will-change: flex-basis, width, max-width, opacity, transform;
 
 .tt-surface--editbar-hidden .tt-right-panel {
 pointer-events: none;
-border-color: transparent;
 }
 
 .tt-surface--editbar-open .tt-right-panel {
@@ -608,9 +611,10 @@ transition: var(--transition-theme);
 }
 
 .tt-active-count {
-color: var(--text-muted);
-font-size: 1.5rem;
-margin-left: 3.5rem;
+  width: 100%;
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-top: 0.5rem;
 }
 
 .timetable-day-row-weekend {
@@ -828,14 +832,16 @@ height: 2rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 16px 12px;
+  gap: 0.5rem;
+  margin-left: 3.5rem;
+  margin-bottom: 1rem;
   background: var(--surface-input);
-  border: 2px dashed var(--border-soft);
+  border: 0.2rem dashed var(--border-soft);
   border-radius: 1rem;
   cursor: grab;
   transition: all 200ms ease;
-  min-height: 80px;
+  height: 7rem;
+  z-index: 0;
 }
 
 .editbar-bin:hover {
@@ -1190,7 +1196,6 @@ flex-direction: column;
 }
 
 .tt-right-panel {
-  position: absolute;
   flex: 0 0 auto;
   max-width: 100%;
   width: 100%;

@@ -733,6 +733,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         showBin={isEditModeEnabled}
                         dayLabels={isEditModeEnabled ? [] : dayLabels}
                     />
+                    {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
+                    {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
                     <motion.div
                         className="tt-block-layer"
                         variants={blockListVariants}
@@ -764,6 +766,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     </motion.div>
                 </motion.div>
 
+                
                 {!isEditModeEnabled && (
                     <div className="tt-bottom-row">
                         <div className="tt-bottom-nav">
@@ -795,9 +798,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     </motion.div>
                     </AnimatePresence>
                 )}
-
-                {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
-                {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
             </section>
 
             <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
