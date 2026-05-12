@@ -93,8 +93,8 @@ export default function Block({
     const handleMouseUp = (e: MouseEvent) => {
       const finalX = e.pageX - startX;
       const finalY = e.pageY - startY;
-      const cursorX = finalX + cursorOffsetX;
-      const cursorY = finalY + cursorOffsetY;
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
 
       if (!didDrag) {
         handlePickup(blockId, hourSpan);

@@ -583,19 +583,19 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         const blockHeight = Math.max(1, Math.round(cellSizeForDrag.y) + BLOCK_HEIGHT_ADJUST);
         const centerX = newX + blockWidth / 2;
         const centerY = newY + blockHeight / 2;
-        console.log("binbin center",centerX,centerY)
-        console.log("binbin cursor",cursorX,cursorY)
 
         // Check if block is dropped in bin area below calendar (use center point)
         const binRect = binRef.current?.getBoundingClientRect();
         const gridRect = boardRef.current?.getBoundingClientRect();
 
         if (binRect && gridRect) {
+            console.log('binbin binrect',binRect.left,binRect.top,binRect.bottom,binRect.right)
+            console.log('binbin cursor',cursorX,cursorY)
             const isInsideBin =
-                cursorX + gridRect.left >= binRect.left &&
-                cursorX + gridRect.left <= binRect.right &&
-                cursorY + gridRect.top >= binRect.top &&
-                cursorY + gridRect.top <= binRect.bottom;
+                cursorX >= binRect.left &&
+                cursorX <= binRect.right &&
+                cursorY >= binRect.top &&
+                cursorY <= binRect.bottom;
             if (isInsideBin) {
                 let newData = removeBlock(blocksDataRef.current, blockId);
                 if (!isNewBlockPresent(newData)) {
@@ -785,9 +785,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         exit="exit"
                         ref={binRef}
                         className={`editbar-bin ${isDragOverBin ? "is-drag-over" : ""}`.trim()}
-                        style={{
-                        position: "relative",
-                        }}
                         onDragOver={handleBinDragOver}
                         onDragLeave={handleBinDragLeave}
                         onDrop={handleBinDrop}
@@ -804,7 +801,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             </section>
 
             <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
-                {selectedBlockId !== null && (
+                {isEditModeEnabled && (
                     <motion.aside
                         layout
                         variants={rightPanelVariants}
