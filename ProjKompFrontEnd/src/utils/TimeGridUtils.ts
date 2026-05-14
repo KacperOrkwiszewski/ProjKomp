@@ -47,7 +47,6 @@ export function recalculateRowHeights(blocksData: BlockData[],gridProps: GridPro
     return rowHeights;
 }
 
-
 export function getCellIndex(x: number, y: number, gridProps: GridProps) {
     let row = 0;
     let col;
@@ -67,6 +66,8 @@ export function getCellIndex(x: number, y: number, gridProps: GridProps) {
          row = gridProps.rows - 1;
         };
     col = Math.max(0, Math.min(Math.floor(x / cellSize.x), gridProps.cols - 1));
+    console.log("cell index",row,col);
+    console.log("cell index tt props",gridProps)
     return {row, col};
 }
 export function calculateHeight(rowheights: number[]) {

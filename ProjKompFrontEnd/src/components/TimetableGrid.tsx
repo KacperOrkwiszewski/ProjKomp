@@ -22,10 +22,15 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
   const cellSize = { x: gridWidth / cols, y: gridHeight / rows };
   const weekdays = ["PON", "WT", "ŚR", "CZW", "PT"];
   const formatTime = (hour: number, minute: number) => `${hour}:${String(minute).padStart(2, "0")}`;
-  const hours = Array.from({ length: cols }, (_, index) => {
+ const hours = Array.from({ length: cols }, (_, index) => {
     const startHour = 8 + index;
     const endHour = 9 + index;
-    return `${formatTime(startHour, 15)} - ${formatTime(endHour, 0)}`;
+    return (
+      <div className="timetable-hour-content">
+        <div>{formatTime(startHour, 15)}</div>
+        <div>{formatTime(endHour, 0)}</div>
+      </div>
+    );
   });
   
   const dayRows = weekdays.map((day, index) => ({
@@ -39,7 +44,7 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
   
   // CSS Grid template: first row = header, first col = days, rest = grid cells
   const gridTemplateRows = `${headerHeight}px ${dayRows.map((row) => `${row.heightPx}px`).join(" ")}`;
-  const gridTemplateColumns = `50px repeat(${cols}, ${cellSize.x}px)`;
+  const gridTemplateColumns = `5rem repeat(${cols}, ${cellSize.x}px)`;
 
   return (
     <motion.div
@@ -51,8 +56,8 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
         gridTemplateRows: gridTemplateRows,
         gridTemplateColumns: gridTemplateColumns,
         gap: 0,
-        width: `${50 + gridWidth}px`,
-        height: `${headerHeight + visibleGridHeight}px`,
+        // width: `${50 + gridWidth}px`,
+        // height: `${headerHeight + visibleGridHeight}px`,
       }}
     >
       {/* Top-left corner (empty cell) */}

@@ -171,6 +171,7 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
           <label htmlFor="block-extra">informacje dodatkowe</label>
           <InputTextarea
             id="block-extra"
+            className="editbar-block-extra"
             value={currentInfo}
             disabled
             rows={1}
@@ -247,6 +248,7 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
           <label htmlFor="block-note">notatka</label>
           <InputTextarea
             id="block-note"
+            className="editbar-block-note"
             rows={2}
             value={draft?.note ?? ""}
             disabled={disabled}

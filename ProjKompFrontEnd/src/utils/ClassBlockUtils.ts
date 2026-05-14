@@ -51,8 +51,8 @@ export function removeBlock(blocksData: BlockData[],blockID:number){
     return newBlocksData;
 }
 
-export function updateBlockPosition(blocksData: BlockData[], blockId: number, newX: number, newY: number, gridProps: GridProps) {
-    const cellIndex = getCellIndex(newX, newY, gridProps);
+export function updateBlockPosition(blocksData: BlockData[], blockId: number, cellIndex:{row:number,col:number}) {
+    console.log("cell index its me 2")
     
     return blocksData.map(block => {
         if (block.id === blockId) {
@@ -103,12 +103,13 @@ export function findFirstAvailableSubrow(blocksData: BlockData[], targetRow: num
 }
 
 export const getGridSnappedPosition = (x: number, y: number, hourSpan: number, gridProps: GridProps) => {
-        const cellIndex = getCellIndex(x,y,gridProps);
-        const overhang = Math.max(cellIndex.col + hourSpan - gridProps.cols, 0);
+    console.log("cell index its me 1")    
+    const cellIndex = getCellIndex(x,y,gridProps);
+    const overhang = Math.max(cellIndex.col + hourSpan - gridProps.cols, 0);
     cellIndex.col = Math.max(0, cellIndex.col - overhang);
-        const cellPos = getCellPosition(cellIndex.row, cellIndex.col, gridProps);
-        return cellPos;
-    };
+    const cellPos = getCellPosition(cellIndex.row, cellIndex.col, gridProps);
+    return cellPos;
+};
 
 export function findAvailableIndex(blocksData: BlockData[]){
     const indexes = blocksData.map(block=>block.id);

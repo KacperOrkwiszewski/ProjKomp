@@ -37,5 +37,5 @@ export function isNewBlockPresent(blocksData:BlockData[]){
 }
 
 export function getNewBlockPosition(bin: BinData){
-    return { x: bin.StartPoint.x - 140, y: bin.StartPoint.y + 20};
+    return { x: bin.StartPoint.x, y: bin.StartPoint.y};
 }
