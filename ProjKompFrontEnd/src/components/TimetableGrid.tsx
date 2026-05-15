@@ -27,8 +27,7 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
     const endHour = 9 + index;
     return (
       <div className="timetable-hour-content">
-        <div>{formatTime(startHour, 15)}</div>
-        <div>{formatTime(endHour, 0)}</div>
+        <div>{formatTime(startHour, 15)} - {formatTime(endHour, 0)}</div>
       </div>
     );
   });
