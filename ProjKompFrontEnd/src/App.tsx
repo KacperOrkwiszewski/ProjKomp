@@ -68,15 +68,18 @@ function AppContent() {
   const gridHeight = rowHeight * 5;
   const headerHeight = Math.max(24, Math.round(rowHeight * 0.65));
 
+  function remToPx(rem: number) {
+    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  }
   const gridProps = useMemo(() => ({
     rows: 5,
     cols: 12,
     gridWidth,
     gridHeight,
     rowHeights: [1, 1, 1, 1, 1],
-    StartPoint: { x: 50, y: headerHeight },
+    StartPoint: { x: remToPx(5), y: headerHeight },
     Bin: {
-      StartPoint: { x: gridWidth - 230, y: gridHeight + headerHeight + 18 },
+      StartPoint: { x: gridWidth, y: gridHeight + headerHeight},
       height: 62,
       width: 230,
     } 
@@ -93,7 +96,9 @@ function AppContent() {
             aria-label="Przelacz motyw"
             onClick={handleThemeToggle}
           >
-            <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+            <i
+              className={`pi ${theme === "dark" ? "pi-sun" : "pi-moon"}`}
+            />
           </button>
           {user ? (
             <>

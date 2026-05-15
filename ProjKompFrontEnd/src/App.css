@@ -1,4 +1,8 @@
 
+html {
+    font-size: max(3px,min(1.2vw,12px));
+}
+
 .app-shell {
   font-family: "Titillium Web", sans-serif;
   font-weight: 600;
@@ -42,18 +46,22 @@
 }
 
 .app-theme-toggle {
+  display: flex;
+  overflow: hidden;
+  flex: 0 0 3rem;
   width: 3rem;
   height: 3rem;
-  border-radius: 50%;
+  border-radius: 3rem;
   border: 0.1rem solid var(--border-soft);
   background: var(--surface-elevated);
   color: var(--text-main);
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
   cursor: pointer;
   transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.app-theme-toggle .pi{
+  font-size: 1.5rem;
 }
 
 .app-login-btn {
@@ -90,9 +98,9 @@
 }
 
 .app-user-email {
-  font-size: 13px;
+  font-size: 1rem;
   color: var(--text-secondary);
-  max-width: 150px;
+  max-width: 10rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -151,15 +159,11 @@
 
 @media (max-width: 1100px) {
   .app-title {
-    font-size: 19px;
+    font-size: 2rem;
   }
 
   .app-user {
-    font-size: 13px;
+    font-size: 1rem;
   }
 
-  .app-footer {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }

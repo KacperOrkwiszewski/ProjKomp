@@ -98,6 +98,10 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const [isDragOverBin, setIsDragOverBin] = useState(false);
     const binRef = useRef<HTMLDivElement | null>(null);
 
+    function remToPx(rem: number) {
+        return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    }
+
     const handleBinDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
@@ -126,8 +130,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const [isEditModeEnabled, setIsEditModeEnabled] = useState(false);
     const boardRef = useRef<HTMLDivElement | null>(null);
     const blocksDataRef = useRef<BlockData[]>([]);
-    const [boardContentWidth, setBoardContentWidth] = useState(gridWidth + 50);
-    const responsiveGridWidth = Math.max(1, boardContentWidth - 50);
+    const [boardContentWidth, setBoardContentWidth] = useState(gridWidth + remToPx(5));
+    const responsiveGridWidth = Math.max(1, boardContentWidth - remToPx(5));
     const { classes: scheduleClasses, terms: scheduleTerms, isLoading: scheduleIsLoading, error: scheduleError } = useScheduleData(activeGroupId, gridProps);
     
     const selectedGroupIds = useMemo(() => selectedGroups.map((group) => group.id), [selectedGroups]);
@@ -203,12 +207,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const currentGridProps = useMemo(() => buildCurrentGridProps(gridProps, rowHeights), [gridProps, rowHeights]);
     const responsiveGridProps = useMemo(() => ({
         ...currentGridProps,
+        StartPoint:{
+            x:  5 * parseFloat(getComputedStyle(document.documentElement).fontSize),
+            y: currentGridProps.StartPoint.y
+        },
         gridWidth: responsiveGridWidth,
         Bin: {
             ...currentGridProps.Bin,
             StartPoint: {
-                x: 50 + responsiveGridWidth - currentGridProps.Bin.width - 11,
-                y: currentGridProps.Bin.StartPoint.y + 3,
+                x: remToPx(10),
+                y: currentGridProps.Bin.StartPoint.y + remToPx(3),
             },
         },
     }), [currentGridProps, responsiveGridWidth]);
@@ -617,7 +625,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         }
 
         // Removed ambiguous "dropped on right side" heuristic; explicit element-rect or bottom bin used above.
-
+        console.log("cell index its me 1")
         const targetIndex = getCellIndex(newX, newY + cellSize.y / 2, dragGridProps);
         const snappedCol = Math.max(0, Math.min(targetIndex.col, dragGridProps.cols - hourSpan));
         const currentBlock = blocksDataRef.current.find((block) => block.id === blockId);
@@ -625,9 +633,10 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         if (currentBlock && currentBlock.row === targetIndex.row && currentBlock.col === snappedCol) {
             return getCellPosition(currentBlock.row, currentBlock.col, dragGridProps);
         }
-
+        targetIndex.col = snappedCol
         const snappedPos = getGridSnappedPosition(newX, newY + cellSize.y/2, hourSpan, dragGridProps);
-        const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, snappedPos.x, snappedPos.y, dragGridProps);
+        console.log('cell index im problem :)')
+        const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, targetIndex);
         let recalculatedBlocks = sortBlocksByPlacement(newBlocksData);
         if(!isNewBlockPresent(recalculatedBlocks)){
             recalculatedBlocks = SpawnNewBlock(recalculatedBlocks,dragGridProps.Bin);
@@ -832,7 +841,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 header="Eksportuj do PDF"
                 visible={showPdfDialog}
                 onHide={() => setShowPdfDialog(false)}
-                style={{ width: "400px" }}
                 className="pdf-export-modal"
                 maskClassName="pdf-export-modal-mask"
                 modal
