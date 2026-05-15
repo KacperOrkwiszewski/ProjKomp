@@ -215,8 +215,9 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         Bin: {
             ...currentGridProps.Bin,
             StartPoint: {
-                x: remToPx(10),
-                y: currentGridProps.Bin.StartPoint.y + remToPx(3),
+                x: responsiveGridWidth/5,
+
+                y: rowHeights.reduce((sum, h) => sum + h, 0) *cellSize.y + cellSize.y + remToPx(2),
             },
         },
     }), [currentGridProps, responsiveGridWidth]);
@@ -661,7 +662,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 <div className="tt-prompt-row">
                     <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
                     <InputText placeholder="Wpisz prompt" className="tt-prompt-input" />
-                    <Button icon="pi pi-eject eject-send-button" rounded text className="tt-icon-btn" />
+                    <Button icon="pi pi-send" rounded text className="tt-icon-btn" />
                 </div>
 
                 <div className="tt-plan-row">
@@ -742,8 +743,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         showBin={isEditModeEnabled}
                         dayLabels={isEditModeEnabled ? [] : dayLabels}
                     />
-                    {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
-                    {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
                     <motion.div
                         className="tt-block-layer"
                         variants={blockListVariants}
@@ -771,6 +770,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                                     />
                                 );
                             })}
+                            
+                        
                         </AnimatePresence>
                     </motion.div>
                 </motion.div>
@@ -788,6 +789,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     </div>
                 )}
                 {isEditModeEnabled && (
+                            <div className="tt-bin-wrapper">
                     <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
                     <motion.div
                         layout
@@ -800,17 +802,28 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         onDragOver={handleBinDragOver}
                         onDragLeave={handleBinDragLeave}
                         onDrop={handleBinDrop}
+                        style={{ height: `${cellSize.y + remToPx(2)}px`,
+                                width: `${responsiveGridProps.gridWidth/3}px`,
+                                }}
                     >
                         <i className="pi pi-trash editbar-bin-icon"></i>
                         <span className="editbar-bin-title">Kosz</span>
                         <span className="editbar-bin-subtitle">upuść blok, aby usunąć</span>
                     </motion.div>
+                    
                     </AnimatePresence>
+                    
+                    </div>
                 )}
+                {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
+                    {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
             </section>
+            
+                    
 
             <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
                 {isEditModeEnabled && (
+                    
                     <motion.aside
                         layout
                         variants={rightPanelVariants}

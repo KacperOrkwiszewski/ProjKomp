@@ -59,6 +59,7 @@ export default function Block({
   const renderTopOffset = isNewClassBlock ? Math.round(blockHeight * 0.25) : 0;
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    console.log("musedown",col,row)
     if (!isEditModeEnabled) {
       return;
     }

@@ -122,8 +122,12 @@ font-family: inherit;
 display: flex;
 align-items: stretch;
 gap: 1rem;
-}
 
+}
+.tt-board{
+  
+  box-shadow: var(--over-panel-shadow);
+}
 .tt-left-panel,
 .tt-right-panel {
 background: linear-gradient(180deg, var(--surface-panel-alt) 0%, var(--surface-panel) 100%);
@@ -136,7 +140,7 @@ transition: var(--transition-theme);
 .tt-left-panel {
 flex: 1 1 auto;
 min-width: 0;
-padding: 2rem;
+padding: 2rem;  
 }
 
 .tt-right-panel {
@@ -337,8 +341,8 @@ transition: transform 180ms ease, background-color 180ms ease;
 }
 
 .tt-mail-toggle input:checked + .tt-mail-toggle-track {
-background: var(--accent-secondary);
-border-color: var(--accent-secondary);
+background: var(--accent-primary);
+border-color: var(--accent-primary);
 }
 
 .tt-mail-toggle input:checked + .tt-mail-toggle-track .tt-mail-toggle-thumb {
@@ -358,10 +362,11 @@ transition: var(--transition-theme);
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 2rem;
-  height: 2rem;
-  background-color: var(--accent-primary);
-  border-radius: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  /* background-color: var(--accent-primary); */
+  border-radius: 2rem;
+  border-color: var(--border-soft);
   color: var(--text-on-accent);
 }
 .add-group-button .pi{
@@ -423,9 +428,9 @@ border: 0.1rem solid var(--border-soft);
   align-items: center;
   justify-content: center;
   background: var(--surface-panel-alt);
-  border-right: 0.1rem solid var(--border-soft);
-  border-radius: 1rem;
-  border-bottom: 0.1rem solid var(--border-soft);
+  /* border-right: 0.1rem solid var(--border-soft); */
+  /* border-radius: 1rem; */
+  /* border-bottom: 0.1rem solid var(--border-soft); */
   font-size: 1rem;
   font-weight: 600;
   width: 100%;
@@ -454,7 +459,7 @@ border: 0.1rem solid var(--border-soft);
   background: var(--surface-main);
   border: 0.2em solid var(--surface-main);
   border-top: 0;
-  border-bottom: 0;
+  /* border-bottom: 0; */
 }
 
 .timetable-day-header {
@@ -463,14 +468,16 @@ border: 0.1rem solid var(--border-soft);
   align-items: center;
   justify-content: center;
   background: var(--surface-panel-alt);
-  border-right: 0.1rem solid var(--border-soft);
-  border-bottom: 0.1rem solid var(--border-soft);
-  border-radius: 1rem;
+  border: 0.2em solid var(--surface-main);
+  border-top: none;
+  /* border-right: 0.1rem solid var(--border-soft);
+  border-bottom: 0.1rem solid var(--border-soft); */
+  /* border-radius: 1rem; */
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-main);
-  width: 90%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   /* padding: 0.2rem 0.4rem; */
   overflow: hidden;
   text-align: center;
@@ -503,7 +510,7 @@ border: 0.1rem solid var(--border-soft);
 }
 
 .timetable-cell {
-  background: var(--surface-panel-alt);
+  background: var(--surface-grid-cell);
   border-right: 0.1rem solid var(--border-grid-subtle);
   border-bottom: 0.1rem solid var(--border-grid-subtle);
   transition: var(--transition-theme);
@@ -542,14 +549,11 @@ border: 0.1rem solid var(--border-soft);
   display: none;
 }
 
-.timetable-unified-container {
-  border-radius: 0.5rem;
-  box-shadow: var(--over-panel-shadow);
-  border: 0.2em solid var(--surface-main);
-  overflow:visible;
+
+.tt-new-block{
+  margin-top: 4rem;
+  position: relative;
 }
-
-
 
 .tt-block-layer {
   position: absolute;
@@ -622,7 +626,6 @@ transition: var(--transition-theme);
   color: var(--text-muted);
   font-size: 1rem;
   margin-top: 0.5rem;
-  margin-left: 4rem;
   text-align: center;
 }
 
@@ -837,17 +840,23 @@ width: 2rem;
 height: 2rem;
 }
 
+.tt-bin-wrapper{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
 
 .editbar-bin {
   position: relative;
+  bottom: 0rem;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  margin-top: 6rem;
-  margin-left: 3.5rem;
-  margin-bottom: 1rem;
+  margin-top: 2rem;
+  gap: 0.2rem;
+  padding: 0.5rem;
   background: var(--surface-input);
   border: 0.2rem dashed var(--border-soft);
   border-radius: 0.5rem;
@@ -855,6 +864,7 @@ height: 2rem;
   transition: all 200ms ease;
   height: 7rem;
   z-index: 0;
+  width: 100%;
 }
 
 .editbar-bin:hover {
@@ -902,7 +912,7 @@ font-weight: 700;
 .tt-class-block {
 	border: 0.1rem solid var(--class-border);
   box-sizing: border-box;
-  border-radius: 0.5em;
+  /* border-radius: 0.5em; */
   transition:
   left 240ms ease,
   top 240ms ease,
@@ -1214,7 +1224,7 @@ border-color: #ad1f1f;
   box-shadow: var(--panel-shadow)
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 900px) {
 .tt-surface {
 flex-direction: column;
 }
@@ -1233,22 +1243,21 @@ flex-direction: column;
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-
-    height: 100%;
+    /* height: 100%;
     gap: 1rem;
     gap: 1rem;
     height: 100%;
-    width: 100%;
+    width: 100%; 
     min-width: 100%;
     max-width: 100%;
-    min-height: 0;
+    /* min-height: 0;
     overflow: show;
     justify-content: space-around;
     align-items: top;
-    padding: 0.5rem;
+    padding: 0.5rem; */
   }
   .editbar-field label{
-    font-size: min(1.5rem,12px);
+    /* font-size: min(1.5rem,12px); */
   }
   .tt-edit-panel .p-inputtext,
   .tt-edit-panel .p-inputtextarea,
@@ -1257,37 +1266,27 @@ flex-direction: column;
     height: 4rem;
   }
   .editbar-wrapper{
-
-  position: relative;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  flex: 1;
-  min-height: 0;
-  max-width: none;
-  min-width: none;
-  width: 100%;
-  padding: 1rem;
+    /* position: relative;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
+    max-width: none;
+    /* min-width: none; */
+    width: 100%;
+    padding: 1rem;
+    max-width: none;
 }
 .editbar-block-extra, .editbar-block-note{
-  height: 10rem;
+  /* height: 10rem;
   min-height: 10rem;
-  max-height: 10rem;
-}
-
-.tt-surface--editbar-hidden .tt-right-panel {
-max-height: 0;
-opacity: 0;
-transform: translateY(-12px);
-box-shadow: none;
-padding-top: 0;
-padding-bottom: 0;
-border-color: transparent;
+  max-height: 10rem; */
 }
 .tt-term-cell{
-  height: 3rem;
-  font-size: 1.5rem;
+  min-height: 20px;
+  font-size: min(1.5rem,12px);
 }
 }

@@ -51,7 +51,10 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
   const previousIdRef = useRef<number | null>(blockData?.id ?? null);
   const previousBlockRef = useRef<BlockData | null>(cloneBlockData(blockData));
   const draftRef = useRef<BlockData | null>(cloneBlockData(blockData));
-
+  const maxHourSpan = draft
+  ? Math.max(1, 12 - Math.max(0, draft.col))
+  : 12;
+  
   useEffect(() => {
     draftRef.current = draft;
   }, [draft]);
@@ -185,18 +188,26 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
                 id="block-hours"
                 value={draft?.hourSpan ?? 1}
                 disabled={disabled}
-                onValueChange={(e) => handleFieldChange("hourSpan", Math.max(1, e.value ?? 1))}
+                onValueChange={
+                  (e) => handleFieldChange("hourSpan", 
+                    Math.min(maxHourSpan, Math.max(1, Number(e.value) || 1)))
+                }
                 min={1}
                 max={12}
               />
             {/* </div> */}
             <Slider
-              value={draft?.hourSpan ?? 1}
-              min={1}
-              max={12}
-              disabled={disabled}
-              onChange={(e) => handleFieldChange("hourSpan", Math.max(1, Number(e.value) || 1))}
-            />
+  value={draft?.hourSpan ?? 1}
+  min={1}
+  max={maxHourSpan}
+  disabled={disabled}
+  onChange={(e) =>
+    handleFieldChange(
+      "hourSpan",
+      Math.max(1, Math.min(maxHourSpan, Number(e.value) || 1))
+    )
+  }
+/>
         </div>
 
         <div className="editbar-field">
