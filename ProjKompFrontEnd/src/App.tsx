@@ -55,7 +55,7 @@ function AppContent() {
     await logout();
   };
 
-  const contentWidth = Math.min(980, Math.max(760, width * 0.72));
+  const contentWidth = Math.max(1800, Math.max(760, width * 0.72));
   const CELL_WIDTH_BONUS = 8;
   const CELL_HEIGHT_BONUS = 2;
 

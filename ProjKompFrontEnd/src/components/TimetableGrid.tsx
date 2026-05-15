@@ -47,6 +47,7 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
   const gridTemplateColumns = `5rem repeat(${cols}, ${cellSize.x}px)`;
 
   return (
+    <div className="timetable-unified-containertwo">
     <motion.div
       layout
       transition={layoutTransitionConfig}
@@ -56,8 +57,6 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
         gridTemplateRows: gridTemplateRows,
         gridTemplateColumns: gridTemplateColumns,
         gap: 0,
-        // width: `${50 + gridWidth}px`,
-        // height: `${headerHeight + visibleGridHeight}px`,
       }}
     >
       {/* Top-left corner (empty cell) */}
@@ -65,7 +64,6 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
 
       {/* Top row: Hour headers */}
       {hours.map((hour, hourIndex) => (
-        <div className="timetable-hour-header-wrapper">
           <div className ='timetable-hour-header-container'>
             <div 
               key={`header-${hour}`} 
@@ -74,7 +72,6 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
               {hour}
             </div>
           </div>
-        </div>
       ))}
 
       {/* Left column: Day headers + Grid cells */}
@@ -117,6 +114,7 @@ const TimetableGrid: React.FC<TimetableGridProps> = ({ rows, cols, gridHeight, g
         </React.Fragment>
       ))}
     </motion.div>
+    </div>
   );
 };
 
