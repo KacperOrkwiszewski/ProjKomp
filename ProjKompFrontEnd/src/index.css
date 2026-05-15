@@ -34,6 +34,7 @@
 --shadow-soft: 0 10px 26px rgba(5, 8, 14, 0.26);
 --shadow-floating: 0 14px 28px rgba(6, 11, 20, 0.48);
 --over-panel-shadow: -0.5rem 0.5rem 0 rgba(0, 0, 0, 0.25);
+--button-shadow: -0.2rem 0.2rem 0 rgba(0, 0, 0, 0.25);
 --panel-shadow: -1rem 1rem 0 rgba(16, 17, 18, 0.25);
 	--class-shadow-rest: 0 1px 10px rgba(0, 0, 0, 0.35);
 	--class-shadow-drag: 0 0 0 1px rgba(255, 255, 255, 0.35);
@@ -114,7 +115,7 @@ font-family: inherit;
 }
 
 .tt-layout {
-padding: 0;
+  padding: 0;
 }
 
 .tt-surface {
@@ -178,10 +179,9 @@ align-items: center;
 justify-content: space-evenly;
 gap: 0.5rem;
 margin-bottom: 2rem;
-margin-left: 3.5rem;
 padding: 1rem 0.5rem;
 background-color: var(--surface-main);
-border-radius: 1rem;
+border-radius: 0.5rem;
 
   box-shadow: var(--over-panel-shadow);
 }
@@ -191,9 +191,9 @@ border-radius: 1rem;
 background: var(--surface-input);
 border: 1px solid var(--border-soft);
 color: var(--text-main);
-height: 3.5rem;
+height: 3rem;
 width: 90%;
-font-size: 1.5rem;
+font-size: 1.4rem;
 border-radius: 2rem;
 padding: 0 1rem;
 transition: var(--transition-theme);
@@ -217,7 +217,6 @@ margin-bottom: 0.5rem;
 color: var(--text-soft);
 font-size: 1.5rem;
 font-weight: 500;
-margin-left: 3.5rem;
 }
 
 .tt-plan-tags-row {
@@ -226,7 +225,13 @@ flex-wrap: wrap;
 }
 
 .tt-plan-tags-row .tt-refresh-btn.p-button {
-margin-left: -5px;
+  margin-left: -5px;
+}
+.tt-refresh-btn-wrapper{
+  margin-bottom: 0.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: right;
 }
 
 .tt-plan-chip {
@@ -315,7 +320,7 @@ width: 3.5rem;
 height: 2rem;
 border-radius: 4rem;
 border: 0.1rem solid var(--border-soft);
-background: var(--surface-input);
+background: var(--surface-main);
 padding: 0.2rem;
 display: inline-flex;
 align-items: center;
@@ -365,7 +370,7 @@ transition: var(--transition-theme);
 }
 
 .tt-icon-btn .pi {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .tt-refresh-btn.p-button {
@@ -391,14 +396,7 @@ border: 0.1rem solid var(--border-soft);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.timetable-hour-header-wrapper{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-
+  background-color: var(--surface-main);
 }
 
 .timetable-hour-header-container{
@@ -408,16 +406,15 @@ border: 0.1rem solid var(--border-soft);
   justify-content: center;
   width: 100%;
   background: var(--surface-main);
-  margin-bottom: 0.7rem;
-  border: 0.4em solid var(--surface-main);
+  border: 0.2em solid var(--surface-main);
 }
 .timetable-hour-content{
   width: 100%;
   flex-wrap: wrap;
   display: flex;
   align-items: center;
-  justify-content: center;
-  column-gap: 0.5rem;
+  justify-content: space-between;
+  padding: 1rem;
 }
 
 .timetable-hour-header {
@@ -427,13 +424,12 @@ border: 0.1rem solid var(--border-soft);
   justify-content: center;
   background: var(--surface-panel-alt);
   border-right: 0.1rem solid var(--border-soft);
-  border-radius: 2rem;
+  border-radius: 1rem;
   border-bottom: 0.1rem solid var(--border-soft);
-  width: 100%;
-  height: 3rem;
   font-size: 1rem;
   font-weight: 600;
-  padding: 0.5rem;
+  width: 100%;
+  height: 100%;
   color: var(--text-main);
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
@@ -448,7 +444,7 @@ border: 0.1rem solid var(--border-soft);
   width: 5rem;
   /* justify-content: right; */
   
-  padding-right: 1rem;
+  /* padding-right: 1rem; */
 }
 .timetable-day-header-container{
   display: flex;
@@ -469,13 +465,13 @@ border: 0.1rem solid var(--border-soft);
   background: var(--surface-panel-alt);
   border-right: 0.1rem solid var(--border-soft);
   border-bottom: 0.1rem solid var(--border-soft);
-  border-radius: 2rem;
+  border-radius: 1rem;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-main);
-  width: 3rem;
-  height: 3rem;
-  padding: 0.2rem 0.4rem;
+  width: 90%;
+  height: 90%;
+  /* padding: 0.2rem 0.4rem; */
   overflow: hidden;
   text-align: center;
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
@@ -546,20 +542,13 @@ border: 0.1rem solid var(--border-soft);
   display: none;
 }
 
-.tt-board {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0;
-  margin-top: 2em;
-  margin-left: 0px;
-  overflow: visible;
-  transition: width 240ms ease, background-color 0.3s ease, border-color 0.3s ease;
-  will-change: width;
+.timetable-unified-container {
+  border-radius: 0.5rem;
+  box-shadow: var(--over-panel-shadow);
+  border: 0.2em solid var(--surface-main);
+  overflow:visible;
 }
 
-.tt-board--edit-mode {
-  padding-bottom: 5rem;
-}
 
 
 .tt-block-layer {
@@ -594,14 +583,14 @@ transform: translateX(-50%);
 }
 
 .tt-date-pill {
-width: 14rem;
-height: 4rem;
+width: 16rem;
+height: 3.4rem;
 display: inline-flex;
 align-items: center;
 justify-content: center;
-background: var(--surface-input);
-font-size: 2rem;
-border-radius: 1rem;
+background-color: var(--surface-input);
+font-size: 2.5rem;
+border-radius: 0.5rem;
 font-weight: 700;
 color: var(--text-heading);
 transition: var(--transition-theme);
@@ -613,10 +602,10 @@ transition: var(--transition-theme);
   border-color: var(--accent-primary);
   color: var(--text-on-accent);
   font-weight: 700;
-  height: 3.5rem;
+  height: 3.2rem;
   width: 14rem;
   padding-inline: 1rem;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
 .tt-download-btn.p-button .pi{
@@ -633,7 +622,7 @@ transition: var(--transition-theme);
   color: var(--text-muted);
   font-size: 1rem;
   margin-top: 0.5rem;
-  margin-left: 5rem;
+  margin-left: 4rem;
   text-align: center;
 }
 
@@ -667,7 +656,7 @@ transform-origin: top;
   gap: 0.75rem;
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: show;
   font-size: 2rem;
 }
 
@@ -737,7 +726,7 @@ padding-block: 0.43rem;
 .tt-edit-panel .p-slider {
 background: var(--surface-input);
 height: 0.5rem;
-width: 90%;
+width: 100%;
 margin-top: 0.5rem;
 margin-left:auto;
 margin-right: auto;
@@ -856,6 +845,7 @@ height: 2rem;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  margin-top: 6rem;
   margin-left: 3.5rem;
   margin-bottom: 1rem;
   background: var(--surface-input);
@@ -912,7 +902,7 @@ font-weight: 700;
 .tt-class-block {
 	border: 0.1rem solid var(--class-border);
   box-sizing: border-box;
-  border-radius: 1em;
+  border-radius: 0.5em;
   transition:
   left 240ms ease,
   top 240ms ease,
@@ -922,6 +912,7 @@ font-weight: 700;
   filter 200ms ease;
   will-change: left, top, width, height, transform;
   font-size: 1rem;
+  z-index: 10;
 }
 
 .tt-class-sub {
@@ -934,8 +925,8 @@ white-space: pre-line;
 }
 
 .tt-nav-btn.p-button {
-width: 3.5rem;
-height: 3.5rem;
+width: 3rem;
+height: 3rem;
 border-color: var(--border-soft);
 color: var(--text-main);
 }
@@ -1251,7 +1242,7 @@ flex-direction: column;
     min-width: 100%;
     max-width: 100%;
     min-height: 0;
-    overflow: auto;
+    overflow: show;
     justify-content: space-around;
     align-items: top;
     padding: 0.5rem;
@@ -1262,7 +1253,8 @@ flex-direction: column;
   .tt-edit-panel .p-inputtext,
   .tt-edit-panel .p-inputtextarea,
   .tt-edit-panel .p-inputnumber-input {
-    font-size: max(1.5rem,12px);
+    font-size: min(1.5rem,12px);
+    height: 4rem;
   }
   .editbar-wrapper{
 
@@ -1297,9 +1289,5 @@ border-color: transparent;
 .tt-term-cell{
   height: 3rem;
   font-size: 1.5rem;
-}
-
-.tt-date-pill {
-font-size: 1.5rem;
 }
 }
