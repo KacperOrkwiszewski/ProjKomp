@@ -7,6 +7,7 @@ export function SpawnNewBlock(blocksData:BlockData[],bin :BinData){
     console.log("spawning new block in bin area:", bin);
     console.log("current blocks data:", blocksData);
     let newBlocksData = [...blocksData];
+    if(isNewBlockPresent(blocksData))return newBlocksData
     const newBlock: BlockData = {
         id: findAvailableIndex(blocksData),
         col: -1,

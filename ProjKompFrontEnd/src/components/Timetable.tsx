@@ -447,6 +447,10 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         clearSavedJsonRoot();
         window.location.reload();
     };
+    const handleUndo= () => {
+    };
+    const handleRedo= () => {
+    };
 
     // Handlery dla grup
     const handleAddGroups = (newGroups: GroupInfo[]) => {
@@ -566,10 +570,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
         const block = blocksDataRef.current.find(b => b.id === blockId);
         if (!block) return;
-        if (block.col == -1 || block.row == -1){
-            setBlocksData(SpawnNewBlock(blocksDataRef.current,responsiveGridProps.Bin));
-            setSelectedBlockId(blockId);
-            return;
+        if ((block.col == -1 || block.row == -1)){
+            return
         }
 
         setSelectedBlockId(blockId);
@@ -615,7 +617,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 toast.current?.show({
                     severity: "info",
                     summary: "Przeniesiono do kosza",
-                    detail: `Blok #${blockId} trafil do binu.`,
+                    detail: `Blok #${blockId} usunięty.`,
                     life: 1200,
                 });
                 return {
@@ -643,6 +645,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             recalculatedBlocks = SpawnNewBlock(recalculatedBlocks,dragGridProps.Bin);
         }
         applyBlocksState(recalculatedBlocks);
+        
+        setSelectedBlockId(blockId);
         return snappedPos;
     }
 
@@ -722,7 +726,12 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         onClick={() => setShowGroupSelector(true)}
                     />
                     <div className="tt-plan-row-spacer" />
+                    {isEditModeEnabled && (
+                    <div className="buttones">
+                    <Button icon="pi pi-arrow-left" rounded outlined className="tt-icon-btn tt-undo-btn" onClick={handleUndo} />
+                    <Button icon="pi pi-arrow-right" rounded outlined className="tt-icon-btn tt-redo-btn" onClick={handleRedo} />
                     <Button icon="pi pi-refresh" rounded outlined className="tt-icon-btn tt-refresh-btn" onClick={handleReloadData} />
+                    </div>)}
                 </div>
 
                 <motion.div
@@ -732,6 +741,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     className={`tt-board ${isEditModeEnabled ? "tt-board--edit-mode" : ""}`}
                     style={{ position: "relative", width: "100%", minWidth: 0 }}
                 >
+                    
                     <TimetableGrid
                         rows={rows}
                         cols={cols}

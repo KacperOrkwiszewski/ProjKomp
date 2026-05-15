@@ -52,7 +52,7 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
   const previousBlockRef = useRef<BlockData | null>(cloneBlockData(blockData));
   const draftRef = useRef<BlockData | null>(cloneBlockData(blockData));
   const maxHourSpan = draft
-  ? Math.max(1, 12 - Math.max(0, draft.col))
+  ? (Math.max(1, 12 - Math.max(0, draft.col)))
   : 12;
   
   useEffect(() => {
@@ -83,7 +83,7 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
   const disabled = !draft;
 
   const handleFieldChange = <K extends keyof BlockData>(key: K, value: BlockData[K]) => {
-    if (!draft) {
+    if (!draft || draft.col == -1) {
       return;
     }
 
