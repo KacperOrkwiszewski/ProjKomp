@@ -183,12 +183,12 @@ overflow-y: auto;
 position: relative;
 z-index: 2;
 transition:
-flex-basis 240ms ease,
+/* flex-basis 240ms ease,
 width 240ms ease,
 max-width 240ms ease,
-opacity 180ms ease,
-transform 240ms ease,
-padding 240ms ease,
+opacity 180ms ease, */
+/* transform 240ms ease, */
+/* padding 240ms ease, */
 border-color 240ms ease;
 will-change: flex-basis, width, max-width, opacity, transform;
 }
@@ -902,7 +902,7 @@ height: 2rem;
   border: 0.2rem dashed var(--border-soft);
   border-radius: 0.5rem;
   cursor: grab;
-  transition: all 200ms ease;
+  /* transition: all 200ms ease; */
   height: 7rem;
   z-index: 0;
   width: 100%;
@@ -1164,6 +1164,9 @@ border-color: #ad1f1f;
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+}
+.p-button:focus {
+  box-shadow: none !important;
 }
 
 .pdf-export-actions .p-button {

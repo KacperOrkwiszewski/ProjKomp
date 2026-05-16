@@ -546,6 +546,15 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             });
             return;
         }
+        if (originalBlock.col == -1) {
+                    toast.current?.show({
+                        severity: "warn",
+                        summary: "Nie można przywrócić bloku",
+                        detail: `Blok #${blockId} jest nowym blokiem`,
+                        life: 1500,
+                    });
+                    return;
+                }
 
         const nextBlocks = sortBlocksByPlacement(
             blocksDataRef.current.map((block) => (block.id === blockId ? originalBlock : block))
@@ -662,7 +671,11 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
           transition={layoutTransitionConfig} 
           className={`tt-surface ${selectedBlockId !== null ? "tt-surface--editbar-open" : "tt-surface--editbar-hidden"}`}
         >
-            <section className="tt-left-panel">
+                    <motion.section
+                        layout
+                        transition={layoutTransitionConfig}
+                        className="tt-left-panel"
+                    >
                 <div className="tt-prompt-row">
                     <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
                     <InputText placeholder="Wpisz prompt" className="tt-prompt-input" />
@@ -827,13 +840,12 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 )}
                 {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
                     {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
-            </section>
+            </motion.section>
             
                     
 
             <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
                 {isEditModeEnabled && (
-                    
                     <motion.aside
                         layout
                         variants={rightPanelVariants}

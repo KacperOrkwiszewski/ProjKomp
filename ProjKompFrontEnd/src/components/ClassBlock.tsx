@@ -147,7 +147,7 @@ export default function Block({
         boxShadow: isDragging ? "var(--class-shadow-drag)" : "var(--class-shadow-rest)",
         transition: isDragging
           ? "none"
-          : "left 240ms ease, top 240ms ease, width 240ms ease, height 240ms ease, box-shadow 200ms ease, filter 200ms ease",
+          : "width 240ms ease",
         fontWeight: 600,
         textAlign: "center",
         filter: isDragging ? "brightness(1.06)" : "none",

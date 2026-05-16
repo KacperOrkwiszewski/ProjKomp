@@ -121,7 +121,7 @@ export const rightPanelVariants: Variants = {
     },
   },
   exit: {
-    x: 0,
+    x: "100%",
     opacity: 0,
     scaleX: 0.96,
     transition: {
@@ -162,7 +162,7 @@ export const binPanelVariants: Variants = {
   initial: {
     y: 50,
     opacity: 0,
-    scaleY: 0.85,
+    scaleY: 1,
   },
   animate: {
     y: 0,
@@ -176,7 +176,7 @@ export const binPanelVariants: Variants = {
   exit: {
     y: 50,
     opacity: 0,
-    scaleY: 0.85,
+    scaleY: 1,
     transition: {
       ...layoutTransitionConfig,
       delay: 0,
