@@ -133,8 +133,7 @@ export default function Block({
         width: blockWidth,
         height: blockHeight,
         backgroundColor: classDisplayColor,
-        color: "#ffffff",
-        textShadow: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
+        // color: "#ffffff",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -144,7 +143,7 @@ export default function Block({
         cursor: isEditModeEnabled ? (isDragging ? "grabbing" : "grab") : "default",
         pointerEvents: isDragging ? "none" : "auto",
         userSelect: "none",
-        boxShadow: isDragging ? "var(--class-shadow-drag)" : "var(--class-shadow-rest)",
+        boxShadow: isDragging ? "var(--class-shadow-drag)" : "none", //"var(--class-shadow-rest)",
         transition: isDragging
           ? "none"
           : "width 240ms ease",

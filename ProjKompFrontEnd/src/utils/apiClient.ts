@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { apiUrl } from '../config/api';
 
 type RequestOptions = RequestInit & {
   timeout?: number;
@@ -30,7 +30,7 @@ export async function apiCall(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(apiUrl(endpoint), {
       ...init,
       signal: controller.signal,
     });

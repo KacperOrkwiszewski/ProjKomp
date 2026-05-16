@@ -160,6 +160,17 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
     <div className="editbar-wrapper">
     <div className="tt-edit-panel">
       <div className="editbar-form">
+        <div className="editbar-top-row">
+        <Button
+          icon="pi pi-refresh"
+          rounded
+          outlined
+          className="tt-icon-btn tt-refresh-btn"
+          onClick={handleReplayDraft}
+          disabled={!draft}
+          aria-label="Przywroc dane z dysku"
+        />
+      </div>
         <div className="editbar-field">
           <label htmlFor="block-name">Nazwa przedmiotu</label>
           <InputText
@@ -282,17 +293,6 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
 
       </div>
     </div>
-    <div className="editbar-top-row">
-        <Button
-          icon="pi pi-refresh"
-          rounded
-          outlined
-          className="tt-icon-btn tt-refresh-btn"
-          onClick={handleReplayDraft}
-          disabled={!draft}
-          aria-label="Przywroc dane z dysku"
-        />
-      </div>
     </div>
   );
 };

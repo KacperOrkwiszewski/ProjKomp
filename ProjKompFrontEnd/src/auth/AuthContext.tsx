@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { apiUrl } from '../config/api';
 
 export type User = {
   id: string;
@@ -32,7 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const bootstrapAuth = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+      const response = await fetch(apiUrl('/auth/me'), {
         credentials: 'include',
       });
 
@@ -57,12 +58,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = () => {
     // Redirect to BFF login endpoint
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/login`;
+    window.location.href = apiUrl('/auth/login');
   };
 
   const logout = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+      const response = await fetch(apiUrl('/auth/logout'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -81,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const refreshSession = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        const response = await fetch(apiUrl('/auth/me'), {
           credentials: 'include',
         });
 

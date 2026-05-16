@@ -23,7 +23,6 @@ export type JsonRoot = {
 
 const LOCAL_STORAGE_KEY = "projkomp.timetable.json";
 const DEFAULT_TIMETABLE_NAME = "Lokalny plan";
-const API_URL = import.meta.env.VITE_API_URL;
 
 function normalizeTerms(terms: unknown): number[] {
     if (!Array.isArray(terms)) {

@@ -38,7 +38,7 @@ export const LoginPage: React.FC = () => {
               size="large"
             />
 
-            <div className="login-divider">lub</div>
+            <div className="login-divider"></div>
 
             <p className="login-info">
               Użyj swojego konta organizacyjnego (Microsoft/Entra ID) aby uzyskać dostęp do planu zajęć.
@@ -46,6 +46,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <div className="login-footer">
+            <div className="login-divider"></div>
             <p>
               Projekt kompetencyjny • Politechnika Łódzka
             </p>

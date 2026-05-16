@@ -48,11 +48,19 @@ function rgbToHex(r: number, g: number, b: number) {
 }
 
 export function getClassDisplayColor(color: string, theme: ThemeMode) {
-  if (theme === "dark") {
-    return color;
-  }
-
   const { r, g, b } = hexToRgb(color);
+
+  if (theme === "dark") {
+    // return color
+    const gray = (r + g + b) / 3;
+    const mix = 0.25;
+
+    const nextR = r + (gray - r) * mix;
+    const nextG = g + (gray - g) * mix;
+    const nextB = b + (gray - b) * mix;
+
+    return rgbToHex(nextR, nextG, nextB);
+  }
   const mixWithWhite = 0.68;
   const nextR = r + (255 - r) * mixWithWhite;
   const nextG = g + (255 - g) * mixWithWhite;

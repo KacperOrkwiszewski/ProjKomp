@@ -110,7 +110,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
         onHide={onHide}
         header="Wybierz grupy do dodania"
         modal
-        style={{ width: "90vw", maxWidth: "500px" }}
+        style={{ width: "30rem", maxWidth: "40rem" }}
         className="group-selector-dialog"
         maskClassName="group-selector-dialog-mask"
       >
@@ -136,6 +136,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
                   checked={selectedIds.has(group.id)}
                   onChange={() => handleGroupToggle(group.id)}
                   onClick={(e) => e.stopPropagation()}
+                  className="group-list-checkbox"
                 />
                 <span className="flex-grow-1">{group.name}</span>
               </div>
@@ -143,16 +144,20 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
           </div>
         )}
 
-        <div className="flex gap-2 justify-content-end mt-4">
+        <div className="group-list-buttons">
           <Button
+            icon="pi pi-times"
             label="Anuluj"
             severity="secondary"
+            className="group-list-cancel"
             onClick={onHide}
             disabled={isLoading}
           />
           <Button
+            icon="pi pi-check"
             label="Potwierdź"
             onClick={handleConfirm}
+            className="group-list-confirm"
             disabled={isLoading || groups.length === 0}
           />
         </div>

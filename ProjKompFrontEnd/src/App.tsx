@@ -109,6 +109,7 @@ function AppContent() {
                 onClick={handleLogout}
                 {...hoverTapScale}
               >
+                <i className="pi pi-sign-out"></i>
                 Wyloguj
               </motion.button>
             </>
