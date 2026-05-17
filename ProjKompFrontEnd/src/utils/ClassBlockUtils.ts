@@ -17,6 +17,8 @@ export type BlockData = {
     termMode: "x1" | "x2";
     reference: string;
     activeDates: string[];
+    // When blocks are merged from multiple groups, this holds source group id
+    sourceGroupId?: string;
 };
 
 export function sortBlocksByPlacement(blocksData: BlockData[]) {

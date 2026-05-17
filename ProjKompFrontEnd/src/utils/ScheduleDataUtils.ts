@@ -103,3 +103,30 @@ export function groupClassesByDay(blocks: ScheduledBlockData[], weekDates: strin
 
   return Array.from({ length: 5 }, (_, dayIndex) => filteredBlocks.filter((block) => block.row === dayIndex));
 }
+
+export type GroupBlocks = {
+  groupId: string;
+  blocks: BlockData[];
+};
+
+/**
+ * Merge schedules from multiple groups into a single ScheduledBlockData[] array.
+ * Assigns new unique numeric ids and preserves sourceGroupId on each block.
+ */
+export function mergeGroupSchedules(groups: GroupBlocks[], terms: string[]): ScheduledBlockData[] {
+  const merged: BlockData[] = [];
+  let nextId = 0;
+
+  for (const g of groups) {
+    for (const b of g.blocks) {
+      const copy: BlockData = {
+        ...b,
+        id: nextId++,
+        sourceGroupId: g.groupId,
+      };
+      merged.push(copy);
+    }
+  }
+
+  return refreshScheduledBlocks(merged, terms);
+}

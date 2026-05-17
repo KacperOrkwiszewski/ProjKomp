@@ -31,6 +31,7 @@ import {
   LIST_ANIMATE_PRESENCE_MODE,
 } from "../utils/MotionUtils";
 import { useScheduleData } from "../hooks/useScheduleData";
+import { useMultiGroupScheduleData } from "../hooks/useMultiGroupScheduleData";
 import { filterClassesForWeek, mapClassesToWeekDisplayRows, refreshScheduledBlocks, buildActiveDates } from "../utils/ScheduleDataUtils";
 import { generatePdf } from "../utils/ExportUtils";
 import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId } from "../utils/GroupManager";
@@ -179,9 +180,11 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const [selectedGroups, setSelectedGroupsState] = useState<GroupInfo[]>([]);
     const [activeGroupId, setActiveGroupIdState] = useState<string | null>(null);
     const [showGroupSelector, setShowGroupSelector] = useState(false);
+    const selectedGroupIds = useMemo(() => selectedGroups.map((group) => group.id), [selectedGroups]);
 
     const selectedBlock = blocksData.find(b => b.id === selectedBlockId);
     const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
+    const [editingSubject, setEditingSubject] = useState<string | null>(null);
     const [isEditModeEnabled, setIsEditModeEnabled] = useState(false);
     const boardRef = useRef<HTMLDivElement | null>(null);
     const blocksDataRef = useRef<BlockData[]>([]);
@@ -189,9 +192,11 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const [, setHistoryVersion] = useState(0);
     const [boardContentWidth, setBoardContentWidth] = useState(gridWidth + remToPx(5));
     const responsiveGridWidth = Math.max(1, boardContentWidth - remToPx(5));
-    const { classes: scheduleClasses, terms: scheduleTerms, isLoading: scheduleIsLoading, error: scheduleError } = useScheduleData(activeGroupId, gridProps);
-    
-    const selectedGroupIds = useMemo(() => selectedGroups.map((group) => group.id), [selectedGroups]);
+    const singleSchedule = useScheduleData(activeGroupId, gridProps);
+    const multiSchedule = useMultiGroupScheduleData(selectedGroupIds, gridProps);
+
+    const usedSchedule = (!isEditModeEnabled && selectedGroupIds.length > 1) ? multiSchedule : singleSchedule;
+    const { classes: scheduleClasses, terms: scheduleTerms, isLoading: scheduleIsLoading, error: scheduleError } = usedSchedule;
     const historyGroupKey = activeGroupId ?? "__default__";
     const currentHistory = historyStacksRef.current.get(historyGroupKey);
     const canUndo = (currentHistory?.past.length ?? 0) > 0;
@@ -343,6 +348,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     useEffect(() => {
         if (!isEditModeEnabled) {
             setSelectedBlockId(null);
+            setEditingSubject(null);
         }
     }, [isEditModeEnabled]);
 
@@ -465,11 +471,25 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         }
 
         if (persist) {
-            // Zapisz dla aktywnej grupy
-            if (activeGroupId) {
-                saveBlocksAsJsonForGroup(activeGroupId, sortedBlocks);
+            // Jeśli bloki posiadają pole sourceGroupId, zapisz osobno dla każdej grupy
+            const groupsMap = new Map<string, BlockData[]>();
+            for (const b of sortedBlocks) {
+                if (b.sourceGroupId) {
+                    const arr = groupsMap.get(b.sourceGroupId) ?? [];
+                    arr.push(b);
+                    groupsMap.set(b.sourceGroupId, arr);
+                }
+            }
+
+            if (groupsMap.size > 0) {
+                groupsMap.forEach((blocks, groupId) => saveBlocksAsJsonForGroup(groupId, blocks));
             } else {
-                saveBlocksAsJson(sortedBlocks);
+                // Fallback: save for activeGroup or global
+                if (activeGroupId) {
+                    saveBlocksAsJsonForGroup(activeGroupId, sortedBlocks);
+                } else {
+                    saveBlocksAsJson(sortedBlocks);
+                }
             }
         }
 
@@ -775,6 +795,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             return
         }
 
+        if (selectedGroupIds.length > 1) {
+            if (!editingSubject) {
+                setEditingSubject(block.text);
+                toast.current?.show({ severity: "info", summary: "Edycja", detail: `Wybrano przedmiot: ${block.text}`, life: 1500 });
+            } else if (block.text !== editingSubject) {
+                toast.current?.show({ severity: "warn", summary: "Inny przedmiot", detail: `Edycja ograniczona do: ${editingSubject}`, life: 1800 });
+                return;
+            }
+        }
+
         setSelectedBlockId(blockId);
     }
 
@@ -785,6 +815,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const handleBlockDrop = (blockId: number, newX: number, newY: number, hourSpan: number, dragGridProps: GridProps = responsiveGridProps,cursorX:number,cursorY:number) => {
         if (!isEditModeEnabled) {
             return { x: newX, y: newY };
+        }
+
+        const currentBlock = blocksDataRef.current.find((b) => b.id === blockId);
+        if (!currentBlock) {
+            return { x: newX, y: newY };
+        }
+        if (selectedGroupIds.length > 1 && editingSubject && currentBlock.text !== editingSubject) {
+            toast.current?.show({ severity: "warn", summary: "Inny przedmiot", detail: `Edycja ograniczona do: ${editingSubject}`, life: 1400 });
+            // return to original position
+            return getCellPosition(currentBlock.row, currentBlock.col, dragGridProps);
         }
 
         // Compute block visual size and use its center for bin-hit testing.
@@ -832,7 +872,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         console.log("cell index its me 1")
         const targetIndex = getCellIndex(newX, newY + cellSize.y / 2, dragGridProps);
         const snappedCol = Math.max(0, Math.min(targetIndex.col, dragGridProps.cols - hourSpan));
-        const currentBlock = blocksDataRef.current.find((block) => block.id === blockId);
 
         if (currentBlock && currentBlock.row === targetIndex.row && currentBlock.col === snappedCol) {
             return getCellPosition(currentBlock.row, currentBlock.col, dragGridProps);
@@ -890,7 +929,23 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         <input
                             type="checkbox"
                             checked={isEditModeEnabled}
-                            onChange={(event) => setIsEditModeEnabled(event.target.checked)}
+                            onChange={(event) => {
+                                const wants = event.target.checked;
+                                setIsEditModeEnabled(wants);
+
+                                if (wants) {
+                                    // entering edit mode: clear previously selected subject
+                                    setEditingSubject(null);
+                                    if (selectedGroupIds.length > 1) {
+                                        toast.current?.show({
+                                            severity: "info",
+                                            summary: "Wybierz przedmiot",
+                                            detail: "Kliknij blok, by wybrać przedmiot do edycji.",
+                                            life: 2500,
+                                        });
+                                    }
+                                }
+                            }}
                         />
                         <span className="tt-mail-toggle-track" aria-hidden="true">
                             <span className="tt-mail-toggle-thumb" />
