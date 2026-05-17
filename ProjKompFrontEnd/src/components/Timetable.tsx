@@ -591,6 +591,59 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         });
     };
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!isEditModeEnabled) {
+                return;
+            }
+
+            const target = event.target as HTMLElement | null;
+            const isEditableField = Boolean(
+                target && (
+                    target.closest("input") ||
+                    target.closest("textarea") ||
+                    target.isContentEditable
+                )
+            );
+
+            if (isEditableField) {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+
+            if (key === "delete") {
+                if (selectedBlockId === null) {
+                    return;
+                }
+
+                event.preventDefault();
+                handleDeleteRequest(selectedBlockId);
+                return;
+            }
+
+            if (!event.ctrlKey && !event.metaKey) {
+                return;
+            }
+
+            if (key === "z") {
+                event.preventDefault();
+                handleUndo();
+                return;
+            }
+
+            if (key === "y") {
+                event.preventDefault();
+                handleRedo();
+                return;
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [handleDeleteRequest, handleRedo, handleUndo, isEditModeEnabled, selectedBlockId]);
+
     // Handlery dla grup
     const handleAddGroups = (newGroups: GroupInfo[]) => {
         const updated = Array.from(new Set([...selectedGroups.map((group) => group.id), ...newGroups.map((group) => group.id)]))
