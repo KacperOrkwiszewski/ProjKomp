@@ -480,10 +480,10 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         const currentBlocks = blocksDataRef.current;
         
         // Recalculate activeDates when terms change so week view reflects edits
-        const blockWithUpdatedDates = {
-            ...updatedBlock,
-            activeDates: buildActiveDates(updatedBlock.terms, updatedBlock.row, scheduleTerms)
-        };
+            const blockWithUpdatedDates = {
+                ...updatedBlock,
+            activeDates: buildActiveDates(updatedBlock.terms, updatedBlock.row, scheduleTerms),
+            };
         
         const nextBlocks = sortBlocksByPlacement(
             currentBlocks.map(b => (b.id === blockWithUpdatedDates.id ? blockWithUpdatedDates : b))
@@ -840,7 +840,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         targetIndex.col = snappedCol
         const snappedPos = getGridSnappedPosition(newX, newY + cellSize.y/2, hourSpan, dragGridProps);
         console.log('cell index im problem :)')
-        const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, targetIndex);
+        const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, targetIndex).map((block) => {
+            if (block.id !== blockId) {
+                return block;
+            }
+
+            return {
+                ...block,
+                activeDates: buildActiveDates(block.terms, targetIndex.row, scheduleTerms),
+            };
+        });
         let recalculatedBlocks = sortBlocksByPlacement(newBlocksData);
         if(!isNewBlockPresent(recalculatedBlocks)){
             recalculatedBlocks = SpawnNewBlock(recalculatedBlocks,dragGridProps.Bin);
