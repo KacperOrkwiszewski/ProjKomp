@@ -1,6 +1,5 @@
 const express = require('express');
 const axios = require('axios');
-const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -8,9 +7,9 @@ const SCHEDULE_API_URL = process.env.SCHEDULE_API_URL || 'http://77.237.23.131';
 
 /**
  * GET /api/semester/faculties
- * Proxy to schedule API (pass-through) with auth check
+ * Proxy to schedule API (pass-through)
  */
-router.get('/semester/faculties', requireAuth, async (req, res) => {
+router.get('/semester/faculties', async (req, res) => {
   try {
     const response = await axios.get(`${SCHEDULE_API_URL}/semester/faculties`, {
       timeout: 10000,

@@ -10,7 +10,7 @@ import { isNewBlockPresent } from "../utils/NewBlockUtils";
 import EditBar from "./EditBar";
 import { buildCurrentGridProps } from "../utils/TimetableLayoutUtils";
 import { getWeekDateStrings, getWeekRangeString, getPreviousWeek, getNextWeek, getTodayDate } from "../utils/CalendarUtils";
-import { apiGet } from "../utils/apiClient";
+import { scheduleApiUrl } from "../config/scheduleApi";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
@@ -233,7 +233,12 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             }
 
             try {
-                const data = await apiGet<any>('/api/semester/faculties');
+                const response = await fetch(scheduleApiUrl('/semester/faculties'));
+                if (!response.ok) {
+                    throw new Error(`Nie udało się pobrać grup (HTTP ${response.status})`);
+                }
+
+                const data = await response.json();
                 const weeiaGroups = data?.WEEIA ?? {};
 
                 const resolvedGroups = selectedIds.map((groupId) => {

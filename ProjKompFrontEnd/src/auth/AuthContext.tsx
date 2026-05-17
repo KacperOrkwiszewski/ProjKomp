@@ -12,6 +12,7 @@ export type User = {
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
+  isAnonymous: boolean;
   isLoading: boolean;
   error: string | null;
   login: () => void;
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,10 +42,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        setIsAnonymous(false);
         setError(null);
       } else if (response.status === 401) {
-        // Not logged in
+        // Not logged in - allow anonymous mode
         setUser(null);
+        setIsAnonymous(true);
+        setError(null);
       } else {
         throw new Error('Failed to fetch user session');
       }
@@ -51,6 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Bootstrap auth error:', err);
       setError(err instanceof Error ? err.message : 'Auth error');
       setUser(null);
+      setIsAnonymous(true);
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.ok) {
         setUser(null);
+        setIsAnonymous(true);
         setError(null);
       } else {
         throw new Error('Logout failed');
@@ -77,6 +84,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error('Logout error:', err);
       setError(err instanceof Error ? err.message : 'Logout failed');
+      // Even if logout fails, go back to anonymous mode
+      setUser(null);
+      setIsAnonymous(true);
     }
   };
 
@@ -89,15 +99,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
+          setIsAnonymous(false);
           setError(null);
         } else if (response.status === 401) {
           setUser(null);
+          setIsAnonymous(true);
         } else {
           throw new Error('Failed to refresh session');
         }
       } catch (err) {
         console.error('Refresh session error:', err);
         setUser(null);
+        setIsAnonymous(true);
       }
     };
 
@@ -106,6 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       value={{
         user,
         isAuthenticated: !!user,
+        isAnonymous,
         isLoading,
         error,
         login,

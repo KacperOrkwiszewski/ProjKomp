@@ -1,14 +1,13 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { ProgressSpinner } from 'primereact/progressspinner';
 
-type ProtectedRouteProps = {
+type OptionalAuthRouteProps = {
   children: React.ReactNode;
 };
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const ProtectedRoute: React.FC<OptionalAuthRouteProps> = ({ children }) => {
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,9 +17,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
+  // Allow access both for authenticated and anonymous users
   return <>{children}</>;
 };

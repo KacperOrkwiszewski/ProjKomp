@@ -9,12 +9,17 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+// Dynamiczny CORS dla dev mode - akceptuj porty 5173 i 5174
+const corsOrigin = process.env.NODE_ENV === 'production' 
+  ? FRONTEND_URL 
+  : /localhost:(5173|5174)$/;
+
 app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: corsOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
