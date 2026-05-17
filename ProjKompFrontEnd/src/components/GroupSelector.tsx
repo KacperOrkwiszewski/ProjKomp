@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { ProgressSpinner } from "primereact/progressspinner";
@@ -26,6 +26,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(selectedGroupIds));
+  const [searchQuery, setSearchQuery] = useState("");
   const toastRef = React.useRef<Toast>(null);
 
   // Ładuj grupy z API gdy modal się otwiera
@@ -73,7 +74,23 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
   // Synchronizuj selectedIds z props
   useEffect(() => {
     setSelectedIds(new Set(selectedGroupIds));
+    if (visible) {
+      setSearchQuery("");
+    }
   }, [selectedGroupIds, visible]);
+
+  const filteredGroups = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return groups;
+    }
+
+    return groups.filter((group) => (
+      group.name.toLowerCase().includes(normalizedQuery) ||
+      group.id.toLowerCase().includes(normalizedQuery)
+    ));
+  }, [groups, searchQuery]);
 
   const handleGroupToggle = (groupId: string) => {
     const newSelected = new Set(selectedIds);
@@ -123,25 +140,45 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
             <p>Brak dostępnych grup</p>
           </div>
         ) : (
-          <div className="group-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
-            {groups.map((group) => (
-              <div
-                key={group.id}
-                className="group-item p-3 border-bottom flex align-items-center gap-3"
-                style={{ cursor: "pointer" }}
-                onClick={() => handleGroupToggle(group.id)}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(group.id)}
-                  onChange={() => handleGroupToggle(group.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="group-list-checkbox"
-                />
-                <span className="flex-grow-1">{group.name}</span>
+          <>
+            <div className="group-search">
+              <i className="pi pi-search" aria-hidden="true" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Szukaj grupy"
+                aria-label="Szukaj grupy"
+                className="group-search-input"
+              />
+            </div>
+
+            {filteredGroups.length === 0 ? (
+              <div className="group-list-empty">
+                <p>Brak grup pasujacych do wyszukiwania</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="group-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
+                {filteredGroups.map((group) => (
+                  <div
+                    key={group.id}
+                    className="group-item p-3 border-bottom flex align-items-center gap-3"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleGroupToggle(group.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(group.id)}
+                      onChange={() => handleGroupToggle(group.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="group-list-checkbox"
+                    />
+                    <span className="flex-grow-1">{group.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <div className="group-list-buttons">

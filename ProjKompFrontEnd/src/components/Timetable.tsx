@@ -232,7 +232,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     );
 
     const editModePlacedBlocks = useMemo(
-        () => blocksData.filter((block) => block.col >= 0 && block.row >= 0),
+        () => recalculateBlockSubrows(sortBlocksByPlacement(blocksData.filter((block) => block.col >= 0 && block.row >= 0))),
         [blocksData],
     );
 
@@ -652,6 +652,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         let recalculatedBlocks = sortBlocksByPlacement(newBlocksData);
         if(!isNewBlockPresent(recalculatedBlocks)){
             recalculatedBlocks = SpawnNewBlock(recalculatedBlocks,dragGridProps.Bin);
+            recalculatedBlocks = recalculateBlockPostions(recalculatedBlocks, dragGridProps);
         }
         applyBlocksState(recalculatedBlocks);
         

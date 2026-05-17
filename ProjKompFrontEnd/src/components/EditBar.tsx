@@ -208,17 +208,15 @@ const EditBar: React.FC<EditBarData> = ({ blockData, onSave, onHide, onRestoreFr
               />
             {/* </div> */}
             <Slider
-  value={draft?.hourSpan ?? 1}
-  min={1}
-  max={maxHourSpan}
-  disabled={disabled}
-  onChange={(e) =>
-    handleFieldChange(
-      "hourSpan",
-      Math.max(1, Math.min(maxHourSpan, Number(e.value) || 1))
-    )
-  }
-/>
+              value={draft?.hourSpan ?? 1}
+              min={1}
+              max={maxHourSpan}
+              disabled={disabled}
+              onChange={(e) =>
+                handleFieldChange(
+                  "hourSpan",
+                  Math.max(1, Math.min(maxHourSpan, Number(e.value) || 1))
+              )}/>
         </div>
 
         <div className="editbar-field">
