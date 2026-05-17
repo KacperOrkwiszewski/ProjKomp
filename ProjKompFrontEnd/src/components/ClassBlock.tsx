@@ -42,8 +42,8 @@ export default function Block({
   const cellSize = { x: gridWidth /cols, y: gridHeight / rows };
   const classDisplayColor = getClassDisplayColor(color, theme);
   
-  const blockWidth = Math.max(1, Math.round(cellSize.x * hourSpan) + BLOCK_WIDTH_ADJUST);
-  const blockHeight = Math.max(1, Math.round(cellSize.y) + BLOCK_HEIGHT_ADJUST);
+  const blockWidth = Math.max(cellSize.x, Math.round(cellSize.x * hourSpan))+ BLOCK_WIDTH_ADJUST;
+  const blockHeight = Math.max(cellSize.y, Math.round(cellSize.y))+ BLOCK_HEIGHT_ADJUST;
 
   useEffect(() => {
     if (!isDragging) {
@@ -138,6 +138,7 @@ export default function Block({
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        padding: "4px",
         left: Math.round(position.x) + VISUAL_OFFSET_X - renderLeftOffset,
         top: Math.round(position.y) + VISUAL_OFFSET_Y - renderTopOffset,
         cursor: isEditModeEnabled ? (isDragging ? "grabbing" : "grab") : "default",
