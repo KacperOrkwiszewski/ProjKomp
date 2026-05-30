@@ -1,0 +1,9 @@
+# dont copy these files to the docker image
+node_modules
+.git
+npm-debug.log
+Dockerfile
+.dockerignore
+# ignore confidential files
+.env
+.env.*
