@@ -3,7 +3,7 @@ import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Toast } from "primereact/toast";
-import { scheduleApiUrl } from "../config/scheduleApi";
+import { apiGet } from "../utils/apiClient";
 
 export type GroupInfo = {
   id: string;
@@ -38,12 +38,7 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
     const loadGroups = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(scheduleApiUrl('/semester/faculties'));
-        if (!response.ok) {
-          throw new Error(`Nie udało się pobrać listy grup (HTTP ${response.status})`);
-        }
-
-        const data = await response.json();
+        const data = await apiGet<any>('/api/semester/faculties');
         const weeiaGroups = data?.WEEIA;
 
         if (!weeiaGroups || typeof weeiaGroups !== "object") {
