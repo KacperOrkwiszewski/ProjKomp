@@ -36,6 +36,8 @@ import { filterClassesForWeek, mapClassesToWeekDisplayRows, refreshScheduledBloc
 import { generatePdf } from "../utils/ExportUtils";
 import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId } from "../utils/GroupManager";
 import { cloneBlockData } from "../utils/EditBarUtils";
+import { syncTimetableWithServer } from "../utils/TimetableSyncUtils";
+import { useAuth } from "../auth/AuthContext";
 import footerLogo from "../assets/logo-pl.png";
 import robotImage from "../assets/robot.png";
 import type { GroupInfo } from "./GroupSelector";
@@ -196,6 +198,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const responsiveGridWidth = Math.max(1, boardContentWidth - remToPx(5));
     const singleSchedule = useScheduleData(activeGroupId, gridProps);
     const multiSchedule = useMultiGroupScheduleData(selectedGroupIds, gridProps);
+    const { isAuthenticated } = useAuth();
+    const isAnonymous = !isAuthenticated;
 
     const usedSchedule = (!isEditModeEnabled && selectedGroupIds.length > 1) ? multiSchedule : singleSchedule;
     const { classes: scheduleClasses, terms: scheduleTerms, isLoading: scheduleIsLoading, error: scheduleError } = usedSchedule;
@@ -493,6 +497,13 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     saveBlocksAsJson(sortedBlocks);
                 }
             }
+            
+            // Synchronizacja z serwerem dla zalogowanych użytkowników
+            if (!isAnonymous) {
+                syncTimetableWithServer(sortedBlocks).catch(err => {
+                    console.error("Błąd podczas synchronizacji planu z serwerem:", err);
+                });
+            }
         }
 
         return sortedBlocks;
@@ -681,7 +692,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     scheduleTerms,
                 );
                 const blocksWithBin = SpawnNewBlock(newClasses, responsiveGridProps.Bin);
-                applyBlocksState(blocksWithBin, true);
+                applyBlocksState(blocksWithBin, { persist: true });
                 setPromptText("");
                 toast.current?.show({
                     severity: "success",
