@@ -1,7 +1,7 @@
 import { BlockData } from "./ClassBlockUtils";
 import { GridProps, getCellPosition } from "./TimeGridUtils";
 import { getGroupDataFromStorage, saveGroupDataToStorage } from "./GroupManager";
-import { scheduleApiUrl } from "../config/scheduleApi";
+import { apiGet } from "./apiClient";
 
 export type JsonData = {
     info: {
@@ -112,12 +112,7 @@ export async function loadJsonRoot(isAnonymous: boolean = false): Promise<JsonRo
     }
 
     try {
-        const response = await fetch(scheduleApiUrl('/semester/faculties'));
-        if (!response.ok) {
-            throw new Error(`Nie udalo sie wczytac danych planu zajec (HTTP ${response.status}).`);
-        }
-
-        const data = await response.json();
+        const data = await apiGet<any>('/api/semester/faculties');
         const loaded = data?.WEEIA[105];
 
         const fromFile: JsonRoot = {
@@ -161,12 +156,7 @@ export async function loadJsonRootForGroup(groupId: string, isAnonymous: boolean
 
     // 3. Jeśli zalogowany i nie ma w localStorage, pobierz z API
     try {
-        const response = await fetch(scheduleApiUrl('/semester/faculties'));
-        if (!response.ok) {
-            throw new Error(`Grupa ${groupId} nie znaleziona`);
-        }
-
-        const data = await response.json();
+        const data = await apiGet<any>('/api/semester/faculties');
         const groupData = data?.WEEIA?.[Number(groupId)];
 
         if (!groupData) {

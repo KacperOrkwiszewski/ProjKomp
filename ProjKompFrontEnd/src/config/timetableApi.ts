@@ -1,18 +1,9 @@
-import { scheduleApiUrl } from "./scheduleApi";
+import { apiUrl } from "./api";
 import { JsonData } from "../utils/JsonUtils";
 
-function getAuthHeaders(): Record<string, string> {
-    const token = localStorage.getItem("token");
-    if (!token) return {};
-    return {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-    };
-}
-
 export async function fetchUserTimetable(): Promise<Record<string, JsonData>> {
-    const response = await fetch(scheduleApiUrl('/timetable'), {
-        headers: getAuthHeaders(),
+    const response = await fetch(apiUrl('/api/timetable'), {
+        credentials: 'include',
     });
     
     if (!response.ok) {
@@ -23,9 +14,10 @@ export async function fetchUserTimetable(): Promise<Record<string, JsonData>> {
 }
 
 export async function addClassToTimetable(classData: JsonData): Promise<void> {
-    const response = await fetch(scheduleApiUrl('/timetable'), {
+    const response = await fetch(apiUrl('/api/timetable'), {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(classData)
     });
     
@@ -36,9 +28,10 @@ export async function addClassToTimetable(classData: JsonData): Promise<void> {
 }
 
 export async function updateClassInTimetable(id: string, classData: JsonData): Promise<void> {
-    const response = await fetch(scheduleApiUrl(`/timetable/${id}`), {
+    const response = await fetch(apiUrl(`/api/timetable/${id}`), {
         method: 'PATCH',
-        headers: getAuthHeaders(),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(classData)
     });
     
@@ -48,9 +41,9 @@ export async function updateClassInTimetable(id: string, classData: JsonData): P
 }
 
 export async function removeClassFromTimetable(id: string): Promise<void> {
-    const response = await fetch(scheduleApiUrl(`/timetable/${id}`), {
+    const response = await fetch(apiUrl(`/api/timetable/${id}`), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        credentials: 'include',
     });
     
     if (!response.ok) {
@@ -59,9 +52,9 @@ export async function removeClassFromTimetable(id: string): Promise<void> {
 }
 
 export async function clearUserTimetable(): Promise<void> {
-    const response = await fetch(scheduleApiUrl('/timetable'), {
+    const response = await fetch(apiUrl('/api/timetable'), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        credentials: 'include',
     });
     
     if (!response.ok) {

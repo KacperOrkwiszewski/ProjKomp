@@ -62,13 +62,13 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
           } catch (err) {
             console.error("Failed to load user customized plan, falling back to group", err);
             [jsonRootResponse, termsResponse] = await Promise.all([
-              loadJsonRootForGroup(groupId, isAnonymous),
+              loadJsonRootForGroup(groupId!, isAnonymous),
               fetch("/terms.json"),
             ]);
           }
         } else {
           [jsonRootResponse, termsResponse] = await Promise.all([
-            loadJsonRootForGroup(groupId, isAnonymous),
+            loadJsonRootForGroup(groupId!, isAnonymous),
             fetch("/terms.json"),
           ]);
         }
