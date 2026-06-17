@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GridProps } from "../utils/TimeGridUtils";
 import { loadJsonRootForGroup, jsonToBlockData } from "../utils/JsonUtils";
 import { validateTermsData, mergeGroupSchedules } from "../utils/ScheduleDataUtils";
+import { useAuth } from "../auth/AuthContext";
 
 type ScheduleDataState = {
   timetableName: string;
@@ -22,6 +23,7 @@ const INITIAL_STATE: ScheduleDataState = {
 export function useMultiGroupScheduleData(groupIds: string[], gridProps: GridProps) {
   const [state, setState] = useState<ScheduleDataState>(INITIAL_STATE);
   const initialGridPropsRef = useRef(gridProps);
+  const { isAnonymous } = useAuth();
 
   useEffect(() => {
     if (!groupIds || groupIds.length === 0) {
@@ -40,7 +42,7 @@ export function useMultiGroupScheduleData(groupIds: string[], gridProps: GridPro
         const rawTerms = await termsResponse.json();
         const terms = validateTermsData(rawTerms);
 
-        const loads = await Promise.all(groupIds.map((groupId) => loadJsonRootForGroup(groupId)));
+        const loads = await Promise.all(groupIds.map((groupId) => loadJsonRootForGroup(groupId, isAnonymous)));
 
         const groups = loads.map((jsonRoot, index) => ({
           groupId: groupIds[index],
@@ -68,7 +70,7 @@ export function useMultiGroupScheduleData(groupIds: string[], gridProps: GridPro
     return () => {
       cancelled = true;
     };
-  }, [JSON.stringify(groupIds || []), gridProps]);
+  }, [JSON.stringify(groupIds || []), gridProps, isAnonymous]);
 
   return state;
 }

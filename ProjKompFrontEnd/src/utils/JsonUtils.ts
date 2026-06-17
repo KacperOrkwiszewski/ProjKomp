@@ -1,7 +1,7 @@
 import { BlockData } from "./ClassBlockUtils";
 import { GridProps, getCellPosition } from "./TimeGridUtils";
 import { getGroupDataFromStorage, saveGroupDataToStorage } from "./GroupManager";
-import { apiGet } from "./apiClient";
+import { scheduleApiUrl } from "../config/scheduleApi";
 
 export type JsonData = {
     info: {
@@ -96,14 +96,28 @@ function getLocalRoot(): JsonRoot | null {
     return parseJsonRoot(window.localStorage.getItem(LOCAL_STORAGE_KEY));
 }
 
-export async function loadJsonRoot(): Promise<JsonRoot> {
+export async function loadJsonRoot(isAnonymous: boolean = false): Promise<JsonRoot> {
     const localRoot = getLocalRoot();
     if (localRoot) {
         return localRoot;
     }
 
+    // Jeśli anonimowy, nie próbuj API
+    if (isAnonymous) {
+        const fallback: JsonRoot = {
+            name: DEFAULT_TIMETABLE_NAME,
+            classes: []
+        };
+        return fallback;
+    }
+
     try {
-        const data = await apiGet<any>('/api/semester/faculties');
+        const response = await fetch(scheduleApiUrl('/semester/faculties'));
+        if (!response.ok) {
+            throw new Error(`Nie udalo sie wczytac danych planu zajec (HTTP ${response.status}).`);
+        }
+
+        const data = await response.json();
         const loaded = data?.WEEIA[105];
 
         const fromFile: JsonRoot = {
@@ -126,18 +140,33 @@ export async function loadJsonRoot(): Promise<JsonRoot> {
 /**
  * Ładuje dane grupy - najpierw localStorage, jeśli nie ma to pobiera z API
  * @param groupId - ID grupy do pobrania
+ * @param isAnonymous - jeśli true, tylko localStorage (bez API)
  * @returns JsonRoot z danymi grupy
  */
-export async function loadJsonRootForGroup(groupId: string): Promise<JsonRoot> {
+export async function loadJsonRootForGroup(groupId: string, isAnonymous: boolean = false): Promise<JsonRoot> {
     // 1. Sprawdzić localStorage
     const localRoot = getGroupDataFromStorage(groupId);
     if (localRoot) {
         return localRoot;
     }
 
-    // 2. Jeśli nie ma w localStorage, pobierz z API
+    // 2. Jeśli anonimowy, zwróć pusty plan (nie ma dostępu do API)
+    if (isAnonymous) {
+        const fallback: JsonRoot = {
+            name: `Grupa ${groupId}`,
+            classes: []
+        };
+        return fallback;
+    }
+
+    // 3. Jeśli zalogowany i nie ma w localStorage, pobierz z API
     try {
-        const data = await apiGet<any>('/api/semester/faculties');
+        const response = await fetch(scheduleApiUrl('/semester/faculties'));
+        if (!response.ok) {
+            throw new Error(`Grupa ${groupId} nie znaleziona`);
+        }
+
+        const data = await response.json();
         const groupData = data?.WEEIA?.[Number(groupId)];
 
         if (!groupData) {
@@ -149,7 +178,7 @@ export async function loadJsonRootForGroup(groupId: string): Promise<JsonRoot> {
             classes: Array.isArray(groupData?.classes) ? groupData.classes : []
         };
 
-        // 3. Zapisz do localStorage dla przyszłości
+        // 4. Zapisz do localStorage dla przyszłości
         saveGroupDataToStorage(groupId, fromApi);
         return fromApi;
     } catch (error) {

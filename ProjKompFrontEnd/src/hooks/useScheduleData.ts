@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GridProps } from "../utils/TimeGridUtils";
 import { jsonToBlockData, loadJsonRootForGroup } from "../utils/JsonUtils";
 import { refreshScheduledBlocks, validateTermsData, ScheduledBlockData } from "../utils/ScheduleDataUtils";
+import { useAuth } from "../auth/AuthContext";
 
 type ScheduleDataState = {
   timetableName: string;
@@ -22,6 +23,7 @@ const INITIAL_STATE: ScheduleDataState = {
 export function useScheduleData(groupId: string | null, gridProps: GridProps) {
   const [state, setState] = useState<ScheduleDataState>(INITIAL_STATE);
   const initialGridPropsRef = useRef(gridProps);
+  const { isAnonymous } = useAuth();
 
   useEffect(() => {
     if (!groupId) {
@@ -40,7 +42,7 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
     async function loadScheduleData() {
       try {
         const [jsonRootResponse, termsResponse] = await Promise.all([
-          loadJsonRootForGroup(groupId),
+          loadJsonRootForGroup(groupId, isAnonymous),
           fetch("/terms.json"),
         ]);
 
@@ -91,7 +93,7 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
     return () => {
       cancelled = true;
     };
-  }, [groupId]);
+  }, [groupId, isAnonymous]);
 
   return state;
 }
