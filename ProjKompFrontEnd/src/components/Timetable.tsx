@@ -31,9 +31,11 @@ import {
   LIST_ANIMATE_PRESENCE_MODE,
 } from "../utils/MotionUtils";
 import { useScheduleData } from "../hooks/useScheduleData";
+import { useMultiGroupScheduleData } from "../hooks/useMultiGroupScheduleData";
 import { filterClassesForWeek, mapClassesToWeekDisplayRows, refreshScheduledBlocks, buildActiveDates } from "../utils/ScheduleDataUtils";
 import { generatePdf } from "../utils/ExportUtils";
 import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId } from "../utils/GroupManager";
+import { cloneBlockData } from "../utils/EditBarUtils";
 import footerLogo from "../assets/logo-pl.png";
 import robotImage from "../assets/robot.png";
 import type { GroupInfo } from "./GroupSelector";
@@ -83,6 +85,60 @@ const areBlocksLayoutEqual = (left: BlockData[], right: BlockData[]) => {
     return true;
 };
 
+const areStringArraysEqual = (left: string[], right: string[]) => {
+    if (left.length !== right.length) {
+        return false;
+    }
+
+    for (let index = 0; index < left.length; index += 1) {
+        if (left[index] !== right[index]) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const areBlocksDataEqual = (left: BlockData[], right: BlockData[]) => {
+    if (left.length !== right.length) {
+        return false;
+    }
+
+    for (let index = 0; index < left.length; index += 1) {
+        const previous = left[index];
+        const next = right[index];
+
+        if (
+            previous.id !== next.id ||
+            previous.col !== next.col ||
+            previous.row !== next.row ||
+            previous.subrow !== next.subrow ||
+            previous.x !== next.x ||
+            previous.y !== next.y ||
+            previous.hourSpan !== next.hourSpan ||
+            previous.color !== next.color ||
+            previous.text !== next.text ||
+            previous.note !== next.note ||
+            previous.extraInfo !== next.extraInfo ||
+            previous.reference !== next.reference ||
+            previous.termMode !== next.termMode ||
+            !areNumberArraysEqual(previous.terms, next.terms) ||
+            !areStringArraysEqual(previous.activeDates, next.activeDates)
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const cloneBlocksSnapshot = (blocks: BlockData[]) => blocks.map((block) => cloneBlockData(block)).filter((block): block is BlockData => block !== null);
+
+type HistoryStacks = {
+    past: BlockData[][];
+    future: BlockData[][];
+};
+
 const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibilityChange }) => {
     const { rows, cols, gridHeight, gridWidth } = gridProps;
     const cellSize = { x: gridWidth / cols, y: gridHeight / rows };
@@ -126,17 +182,45 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const [selectedGroups, setSelectedGroupsState] = useState<GroupInfo[]>([]);
     const [activeGroupId, setActiveGroupIdState] = useState<string | null>(null);
     const [showGroupSelector, setShowGroupSelector] = useState(false);
+    const selectedGroupIds = useMemo(() => selectedGroups.map((group) => group.id), [selectedGroups]);
 
     const selectedBlock = blocksData.find(b => b.id === selectedBlockId);
     const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
+    const [editingSubject, setEditingSubject] = useState<string | null>(null);
     const [isEditModeEnabled, setIsEditModeEnabled] = useState(false);
     const boardRef = useRef<HTMLDivElement | null>(null);
     const blocksDataRef = useRef<BlockData[]>([]);
+    const historyStacksRef = useRef<Map<string, HistoryStacks>>(new Map());
+    const [, setHistoryVersion] = useState(0);
     const [boardContentWidth, setBoardContentWidth] = useState(gridWidth + remToPx(5));
     const responsiveGridWidth = Math.max(1, boardContentWidth - remToPx(5));
-    const { classes: scheduleClasses, terms: scheduleTerms, isLoading: scheduleIsLoading, error: scheduleError } = useScheduleData(activeGroupId, gridProps);
-    
-    const selectedGroupIds = useMemo(() => selectedGroups.map((group) => group.id), [selectedGroups]);
+    const singleSchedule = useScheduleData(activeGroupId, gridProps);
+    const multiSchedule = useMultiGroupScheduleData(selectedGroupIds, gridProps);
+
+    const usedSchedule = (!isEditModeEnabled && selectedGroupIds.length > 1) ? multiSchedule : singleSchedule;
+    const { classes: scheduleClasses, terms: scheduleTerms, isLoading: scheduleIsLoading, error: scheduleError } = usedSchedule;
+    const historyGroupKey = activeGroupId ?? "__default__";
+    const currentHistory = historyStacksRef.current.get(historyGroupKey);
+    const canUndo = (currentHistory?.past.length ?? 0) > 0;
+    const canRedo = (currentHistory?.future.length ?? 0) > 0;
+
+    const getHistoryStacks = (groupKey: string) => {
+        let stacks = historyStacksRef.current.get(groupKey);
+
+        if (!stacks) {
+            stacks = {
+                past: [],
+                future: [],
+            };
+            historyStacksRef.current.set(groupKey, stacks);
+        }
+
+        return stacks;
+    };
+
+    const bumpHistoryVersion = () => {
+        setHistoryVersion((previous) => previous + 1);
+    };
 
     // Załaduj grupy z localStorage przy mount
     useEffect(() => {
@@ -266,6 +350,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     useEffect(() => {
         if (!isEditModeEnabled) {
             setSelectedBlockId(null);
+            setEditingSubject(null);
         }
     }, [isEditModeEnabled]);
 
@@ -358,7 +443,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         }
 
         if (scheduleError) {
-            setBlocksData([]);
+            applyBlocksState([], { persist: false, recordHistory: false });
             return;
         }
 
@@ -366,19 +451,47 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         if (originalBlocksRef.current.length === 0) {
             originalBlocksRef.current = blocksWithBin;
         }
-        applyBlocksState(blocksWithBin, false);
+        applyBlocksState(blocksWithBin, { persist: false, recordHistory: false });
     }, [scheduleIsLoading, scheduleClasses, scheduleTerms, scheduleError]);
 
-    const applyBlocksState = (nextBlocks: BlockData[], persist = true) => {
+    const applyBlocksState = (nextBlocks: BlockData[], options?: { persist?: boolean; recordHistory?: boolean }) => {
+        const persist = options?.persist ?? true;
+        const recordHistory = options?.recordHistory ?? true;
         const sortedBlocks = sortBlocksByPlacement(nextBlocks);
+
+        if (recordHistory && !areBlocksDataEqual(blocksDataRef.current, sortedBlocks)) {
+            const history = getHistoryStacks(historyGroupKey);
+            history.past.push(cloneBlocksSnapshot(blocksDataRef.current));
+            history.future = [];
+            bumpHistoryVersion();
+        }
+
         setBlocksData(sortedBlocks);
 
+        if (selectedBlockId !== null && !sortedBlocks.some((block) => block.id === selectedBlockId)) {
+            setSelectedBlockId(null);
+        }
+
         if (persist) {
-            // Zapisz dla aktywnej grupy
-            if (activeGroupId) {
-                saveBlocksAsJsonForGroup(activeGroupId, sortedBlocks);
+            // Jeśli bloki posiadają pole sourceGroupId, zapisz osobno dla każdej grupy
+            const groupsMap = new Map<string, BlockData[]>();
+            for (const b of sortedBlocks) {
+                if (b.sourceGroupId) {
+                    const arr = groupsMap.get(b.sourceGroupId) ?? [];
+                    arr.push(b);
+                    groupsMap.set(b.sourceGroupId, arr);
+                }
+            }
+
+            if (groupsMap.size > 0) {
+                groupsMap.forEach((blocks, groupId) => saveBlocksAsJsonForGroup(groupId, blocks));
             } else {
-                saveBlocksAsJson(sortedBlocks);
+                // Fallback: save for activeGroup or global
+                if (activeGroupId) {
+                    saveBlocksAsJsonForGroup(activeGroupId, sortedBlocks);
+                } else {
+                    saveBlocksAsJson(sortedBlocks);
+                }
             }
         }
 
@@ -389,10 +502,10 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         const currentBlocks = blocksDataRef.current;
         
         // Recalculate activeDates when terms change so week view reflects edits
-        const blockWithUpdatedDates = {
-            ...updatedBlock,
-            activeDates: buildActiveDates(updatedBlock.terms, updatedBlock.row, scheduleTerms)
-        };
+            const blockWithUpdatedDates = {
+                ...updatedBlock,
+            activeDates: buildActiveDates(updatedBlock.terms, updatedBlock.row, scheduleTerms),
+            };
         
         const nextBlocks = sortBlocksByPlacement(
             currentBlocks.map(b => (b.id === blockWithUpdatedDates.id ? blockWithUpdatedDates : b))
@@ -450,10 +563,109 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         window.location.reload();
     };
     const handleUndo= () => {
+        const history = getHistoryStacks(historyGroupKey);
+        const previousState = history.past.pop();
+
+        if (!previousState) {
+            toast.current?.show({
+                severity: "info",
+                summary: "Brak zmian",
+                detail: "Nie ma czego cofnąć.",
+                life: 1200,
+            });
+            return;
+        }
+
+        history.future.push(cloneBlocksSnapshot(blocksDataRef.current));
+        bumpHistoryVersion();
+        applyBlocksState(previousState, { recordHistory: false });
+
+        toast.current?.show({
+            severity: "info",
+            summary: "Cofnięto zmianę",
+            detail: "Przywrócono poprzedni stan planu.",
+            life: 1200,
+        });
     };
     const handleRedo= () => {
+        const history = getHistoryStacks(historyGroupKey);
+        const nextState = history.future.pop();
+
+        if (!nextState) {
+            toast.current?.show({
+                severity: "info",
+                summary: "Brak zmian",
+                detail: "Nie ma czego przywrócić.",
+                life: 1200,
+            });
+            return;
+        }
+
+        history.past.push(cloneBlocksSnapshot(blocksDataRef.current));
+        bumpHistoryVersion();
+        applyBlocksState(nextState, { recordHistory: false });
+
+        toast.current?.show({
+            severity: "info",
+            summary: "Przywrócono zmianę",
+            detail: "Wrócono do kolejnego stanu planu.",
+            life: 1200,
+        });
     };
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!isEditModeEnabled) {
+                return;
+            }
+
+            const target = event.target as HTMLElement | null;
+            const isEditableField = Boolean(
+                target && (
+                    target.closest("input") ||
+                    target.closest("textarea") ||
+                    target.isContentEditable
+                )
+            );
+
+            if (isEditableField) {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+
+            if (key === "delete") {
+                if (selectedBlockId === null) {
+                    return;
+                }
+
+                event.preventDefault();
+                handleDeleteRequest(selectedBlockId);
+                return;
+            }
+
+            if (!event.ctrlKey && !event.metaKey) {
+                return;
+            }
+
+            if (key === "z") {
+                event.preventDefault();
+                handleUndo();
+                return;
+            }
+
+            if (key === "y") {
+                event.preventDefault();
+                handleRedo();
+                return;
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [handleDeleteRequest, handleRedo, handleUndo, isEditModeEnabled, selectedBlockId]);
+  
     const handlePromptSubmit = async () => {
         if (!promptText.trim() || isPromptLoading) return;
         setIsPromptLoading(true);
@@ -624,6 +836,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             return
         }
 
+        if (selectedGroupIds.length > 1) {
+            if (!editingSubject) {
+                setEditingSubject(block.text);
+                toast.current?.show({ severity: "info", summary: "Edycja", detail: `Wybrano przedmiot: ${block.text}`, life: 1500 });
+            } else if (block.text !== editingSubject) {
+                toast.current?.show({ severity: "warn", summary: "Inny przedmiot", detail: `Edycja ograniczona do: ${editingSubject}`, life: 1800 });
+                return;
+            }
+        }
+
         setSelectedBlockId(blockId);
     }
 
@@ -634,6 +856,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const handleBlockDrop = (blockId: number, newX: number, newY: number, hourSpan: number, dragGridProps: GridProps = responsiveGridProps,cursorX:number,cursorY:number) => {
         if (!isEditModeEnabled) {
             return { x: newX, y: newY };
+        }
+
+        const currentBlock = blocksDataRef.current.find((b) => b.id === blockId);
+        if (!currentBlock) {
+            return { x: newX, y: newY };
+        }
+        if (selectedGroupIds.length > 1 && editingSubject && currentBlock.text !== editingSubject) {
+            toast.current?.show({ severity: "warn", summary: "Inny przedmiot", detail: `Edycja ograniczona do: ${editingSubject}`, life: 1400 });
+            // return to original position
+            return getCellPosition(currentBlock.row, currentBlock.col, dragGridProps);
         }
 
         // Compute block visual size and use its center for bin-hit testing.
@@ -681,7 +913,6 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         console.log("cell index its me 1")
         const targetIndex = getCellIndex(newX, newY + cellSize.y / 2, dragGridProps);
         const snappedCol = Math.max(0, Math.min(targetIndex.col, dragGridProps.cols - hourSpan));
-        const currentBlock = blocksDataRef.current.find((block) => block.id === blockId);
 
         if (currentBlock && currentBlock.row === targetIndex.row && currentBlock.col === snappedCol) {
             return getCellPosition(currentBlock.row, currentBlock.col, dragGridProps);
@@ -689,7 +920,16 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         targetIndex.col = snappedCol
         const snappedPos = getGridSnappedPosition(newX, newY + cellSize.y/2, hourSpan, dragGridProps);
         console.log('cell index im problem :)')
-        const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, targetIndex);
+        const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, targetIndex).map((block) => {
+            if (block.id !== blockId) {
+                return block;
+            }
+
+            return {
+                ...block,
+                activeDates: buildActiveDates(block.terms, targetIndex.row, scheduleTerms),
+            };
+        });
         let recalculatedBlocks = sortBlocksByPlacement(newBlocksData);
         if(!isNewBlockPresent(recalculatedBlocks)){
             recalculatedBlocks = SpawnNewBlock(recalculatedBlocks,dragGridProps.Bin);
@@ -746,7 +986,23 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                         <input
                             type="checkbox"
                             checked={isEditModeEnabled}
-                            onChange={(event) => setIsEditModeEnabled(event.target.checked)}
+                            onChange={(event) => {
+                                const wants = event.target.checked;
+                                setIsEditModeEnabled(wants);
+
+                                if (wants) {
+                                    // entering edit mode: clear previously selected subject
+                                    setEditingSubject(null);
+                                    if (selectedGroupIds.length > 1) {
+                                        toast.current?.show({
+                                            severity: "info",
+                                            summary: "Wybierz przedmiot",
+                                            detail: "Kliknij blok, by wybrać przedmiot do edycji.",
+                                            life: 2500,
+                                        });
+                                    }
+                                }
+                            }}
                         />
                         <span className="tt-mail-toggle-track" aria-hidden="true">
                             <span className="tt-mail-toggle-thumb" />
@@ -799,8 +1055,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     <div className="tt-plan-row-spacer" />
                     {isEditModeEnabled && (
                     <div className="buttones">
-                    <Button icon="pi pi-arrow-left" rounded outlined className="tt-icon-btn tt-undo-btn" onClick={handleUndo} />
-                    <Button icon="pi pi-arrow-right" rounded outlined className="tt-icon-btn tt-redo-btn" onClick={handleRedo} />
+                    <Button icon="pi pi-arrow-left" rounded outlined className="tt-icon-btn tt-undo-btn" onClick={handleUndo} disabled={!canUndo} />
+                    <Button icon="pi pi-arrow-right" rounded outlined className="tt-icon-btn tt-redo-btn" onClick={handleRedo} disabled={!canRedo} />
                     <Button icon="pi pi-refresh" rounded outlined className="tt-icon-btn tt-refresh-btn" onClick={handleReloadData} />
                     </div>)}
                 </div>
