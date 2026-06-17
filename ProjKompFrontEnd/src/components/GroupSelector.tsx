@@ -3,7 +3,7 @@ import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Toast } from "primereact/toast";
-import { apiGet } from "../utils/apiClient";
+import { scheduleApiUrl } from "../config/scheduleApi";
 
 export type GroupInfo = {
   id: string;
@@ -38,14 +38,18 @@ const GroupSelector: React.FC<GroupSelectorProps> = ({
     const loadGroups = async () => {
       setIsLoading(true);
       try {
-        const data = await apiGet<any>('/api/semester/faculties');
+        const response = await fetch(scheduleApiUrl('/semester/faculties'));
+        if (!response.ok) {
+          throw new Error(`Nie udało się pobrać listy grup (HTTP ${response.status})`);
+        }
+
+        const data = await response.json();
         const weeiaGroups = data?.WEEIA;
 
         if (!weeiaGroups || typeof weeiaGroups !== "object") {
           throw new Error("Brak danych o grupach");
         }
 
-        // Konwertuj obiekty na tablicę z id i name
         const groupsList: GroupInfo[] = Object.entries(weeiaGroups).map(([id, groupData]: [string, any]) => ({
           id,
           name: typeof groupData?.name === "string" ? groupData.name : `Grupa ${id}`,
