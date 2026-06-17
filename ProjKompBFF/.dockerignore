@@ -2,8 +2,3 @@
 node_modules
 .git
 npm-debug.log
-Dockerfile
-.dockerignore
-# ignore confidential files
-.env
-.env.*
