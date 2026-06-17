@@ -1,8 +1,4 @@
-# dont copy these files to the docker image
 node_modules
 dist
 .git
 npm-debug.log
-Dockerfile
-.dockerignore
-# cant ignore .env file because of vite
