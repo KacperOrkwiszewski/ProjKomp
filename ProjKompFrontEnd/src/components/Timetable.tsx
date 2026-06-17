@@ -4,13 +4,13 @@ import ClassBlock from "./ClassBlock";
 import GroupSelector from "./GroupSelector";
 import { BlockData, getGridSnappedPosition, updateBlockPosition, removeBlock, recalculateBlockPostions, recalculateBlockSubrows, sortBlocksByPlacement } from "../utils/ClassBlockUtils";
 import { recalculateOccupiedCells, GridProps, isBinArea, getCellIndex, getCellPosition, getRowHeightsFromOccupiedCells } from "../utils/TimeGridUtils";
-import { clearSavedJsonRoot, saveBlocksAsJson, saveBlocksAsJsonForGroup } from "../utils/JsonUtils";
+import { clearSavedJsonRoot, saveBlocksAsJson, saveBlocksAsJsonForGroup, jsonToBlockData } from "../utils/JsonUtils";
 import { getNewBlockPosition, SpawnNewBlock } from "../utils/NewBlockUtils";
 import { isNewBlockPresent } from "../utils/NewBlockUtils";
 import EditBar from "./EditBar";
 import { buildCurrentGridProps } from "../utils/TimetableLayoutUtils";
 import { getWeekDateStrings, getWeekRangeString, getPreviousWeek, getNextWeek, getTodayDate } from "../utils/CalendarUtils";
-import { apiGet } from "../utils/apiClient";
+import { apiGet, apiPost } from "../utils/apiClient";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { Toast } from "primereact/toast";
@@ -93,6 +93,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const [currentDate, setCurrentDate] = useState<Date>(getTodayDate());
     const originalBlocksRef = useRef<BlockData[]>([]);
     const toast = useRef<Toast>(null);
+    const [promptText, setPromptText] = useState("");
+    const [isPromptLoading, setIsPromptLoading] = useState(false);
 
     //bin
     const [isDragOverBin, setIsDragOverBin] = useState(false);
@@ -452,6 +454,45 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const handleRedo= () => {
     };
 
+    const handlePromptSubmit = async () => {
+        if (!promptText.trim() || isPromptLoading) return;
+        setIsPromptLoading(true);
+        try {
+            const response = await apiPost<any>('/api/timetable/prompt', { prompt: promptText });
+            
+            if (response && Array.isArray(response.classes)) {
+                const newClasses = refreshScheduledBlocks(
+                    response.classes.map((jsonItem: any, index: number) => ({
+                        ...jsonToBlockData(jsonItem, responsiveGridProps),
+                        id: index,
+                    })),
+                    scheduleTerms,
+                );
+                const blocksWithBin = SpawnNewBlock(newClasses, responsiveGridProps.Bin);
+                applyBlocksState(blocksWithBin, true);
+                setPromptText("");
+                toast.current?.show({
+                    severity: "success",
+                    summary: "Sukces",
+                    detail: "Wygenerowano nowy plan",
+                    life: 2000,
+                });
+            } else {
+                throw new Error("Nieprawidłowy format odpowiedzi");
+            }
+        } catch (error) {
+            toast.current?.show({
+                severity: "error",
+                summary: "Błąd",
+                detail: "Nie udało się przetworzyć promptu",
+                life: 3000,
+            });
+            console.error(error);
+        } finally {
+            setIsPromptLoading(false);
+        }
+    };
+
     // Handlery dla grup
     const handleAddGroups = (newGroups: GroupInfo[]) => {
         const updated = Array.from(new Set([...selectedGroups.map((group) => group.id), ...newGroups.map((group) => group.id)]))
@@ -679,8 +720,24 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     >
                 <div className="tt-prompt-row">
                     <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
-                    <InputText placeholder="Wpisz prompt" className="tt-prompt-input" />
-                    <Button icon="pi pi-send" rounded text className="tt-icon-btn" />
+                    <InputText 
+                        placeholder="Wpisz prompt" 
+                        className="tt-prompt-input" 
+                        value={promptText}
+                        onChange={(e) => setPromptText(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handlePromptSubmit();
+                        }}
+                        disabled={isPromptLoading}
+                    />
+                    <Button 
+                        icon={isPromptLoading ? "pi pi-spin pi-spinner" : "pi pi-send"} 
+                        rounded 
+                        text 
+                        className="tt-icon-btn" 
+                        onClick={handlePromptSubmit}
+                        disabled={isPromptLoading}
+                    />
                 </div>
 
                 <div className="tt-plan-row">
