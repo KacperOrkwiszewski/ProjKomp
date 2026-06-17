@@ -4,7 +4,7 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const SCHEDULE_API_URL = process.env.SCHEDULE_API_URL || 'http://77.237.23.131';
+const SCHEDULE_API_URL = process.env.SCHEDULE_API_URL;
 
 /**
  * GET /api/semester/faculties
@@ -37,6 +37,24 @@ router.get('/health', async (req, res) => {
     res.json({ status: 'ok', scheduleApiReachable: true });
   } catch (error) {
     res.status(503).json({ status: 'error', scheduleApiReachable: false, message: error.message });
+  }
+});
+
+/**
+ * POST /api/timetable/prompt
+ * Proxy prompt requests to the schedule API
+ */
+router.post('/timetable/prompt', requireAuth, async (req, res) => {
+  try {
+    const response = await axios.post(`${SCHEDULE_API_URL}/timetable/prompt`, req.body, {
+      timeout: 30000, // Longer timeout for prompts
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('API proxy error (prompt):', error.message);
+    const status = error.response?.status || 500;
+    const message = error.response?.data || { error: 'Failed to process prompt' };
+    res.status(status).json(message);
   }
 });
 
