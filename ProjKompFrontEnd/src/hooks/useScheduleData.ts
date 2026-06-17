@@ -23,7 +23,8 @@ const INITIAL_STATE: ScheduleDataState = {
 export function useScheduleData(groupId: string | null, gridProps: GridProps) {
   const [state, setState] = useState<ScheduleDataState>(INITIAL_STATE);
   const initialGridPropsRef = useRef(gridProps);
-  const { isAnonymous } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const isAnonymous = !isAuthenticated;
 
   useEffect(() => {
     if (!groupId) {
@@ -41,10 +42,36 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
 
     async function loadScheduleData() {
       try {
-        const [jsonRootResponse, termsResponse] = await Promise.all([
-          loadJsonRootForGroup(groupId, isAnonymous),
-          fetch("/terms.json"),
-        ]);
+        let jsonRootResponse;
+        let termsResponse;
+
+        if (!isAnonymous) {
+          try {
+            const { fetchUserTimetable } = await import("../config/timetableApi");
+            const userTimetable = await fetchUserTimetable();
+            const classesArray = Object.entries(userTimetable).map(([uuid, classData]) => ({
+              ...classData,
+              reference: uuid
+            }));
+            
+            jsonRootResponse = {
+              name: "Twój plan",
+              classes: classesArray
+            };
+            termsResponse = await fetch("/terms.json");
+          } catch (err) {
+            console.error("Failed to load user customized plan, falling back to group", err);
+            [jsonRootResponse, termsResponse] = await Promise.all([
+              loadJsonRootForGroup(groupId, isAnonymous),
+              fetch("/terms.json"),
+            ]);
+          }
+        } else {
+          [jsonRootResponse, termsResponse] = await Promise.all([
+            loadJsonRootForGroup(groupId, isAnonymous),
+            fetch("/terms.json"),
+          ]);
+        }
 
         if (!termsResponse.ok) {
           throw new Error(`Nie udalo sie wczytac terms.json (HTTP ${termsResponse.status}).`);
@@ -53,7 +80,7 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
         const rawTerms = await termsResponse.json();
         const terms = validateTermsData(rawTerms);
         const classes = refreshScheduledBlocks(
-          jsonRootResponse.classes.map((jsonItem, index) => ({
+          jsonRootResponse.classes.map((jsonItem: any, index: number) => ({
             ...jsonToBlockData(jsonItem, initialGridPropsRef.current),
             id: index,
           })),
