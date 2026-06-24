@@ -37,14 +37,29 @@ export async function syncTimetableWithServer(blocks: BlockData[]): Promise<bool
     try {
         const currentServerState = await fetchUserTimetable();
         const serverUuids = new Set(Object.keys(currentServerState));
+        const serverReferences = new Map<string, string>();
+
+        for (const [uuid, serverClass] of Object.entries(currentServerState)) {
+            if (serverClass.reference) {
+                serverReferences.set(serverClass.reference, uuid);
+            }
+        }
 
         let stateChangedOnServer = false;
 
         // 1. Zaktualizuj lub dodaj nowe klasy
         for (const newClass of newClasses) {
-            const uuid = newClass.reference;
-            if (uuid && serverUuids.has(uuid)) {
-                // Klasa istnieje na serwerze - zróbmy diff
+            const ref = newClass.reference;
+            if (ref && serverUuids.has(ref)) {
+                // Klasa istnieje na serwerze (ref to uuid) - zróbmy diff
+                const serverClass = currentServerState[ref];
+                if (!isEqual(newClass, serverClass)) {
+                    await updateClassInTimetable(ref, newClass);
+                }
+                serverUuids.delete(ref);
+            } else if (ref && serverReferences.has(ref)) {
+                // Klasa istnieje na serwerze (ref to np. WEEIA) - aktualizujemy używając uuid
+                const uuid = serverReferences.get(ref)!;
                 const serverClass = currentServerState[uuid];
                 if (!isEqual(newClass, serverClass)) {
                     await updateClassInTimetable(uuid, newClass);

@@ -47,6 +47,7 @@ router.get('/health', async (req, res) => {
 router.post('/timetable/prompt', requireAuth, async (req, res) => {
   try {
     const response = await axios.post(`${SCHEDULE_API_URL}/timetable/prompt`, req.body, {
+      headers: { Authorization: `Bearer ${req.cookies.auth_token}` },
       timeout: 30000, // Longer timeout for prompts
     });
     res.json(response.data);
@@ -65,7 +66,7 @@ router.post('/timetable/prompt', requireAuth, async (req, res) => {
 router.get('/timetable', requireAuth, async (req, res) => {
   try {
     const response = await axios.get(`${SCHEDULE_API_URL}/timetable`, {
-      headers: { Authorization: req.headers.authorization || '' },
+      headers: { Authorization: `Bearer ${req.cookies.auth_token}` },
       timeout: 10000,
     });
     res.json(response.data);
@@ -84,7 +85,7 @@ router.get('/timetable', requireAuth, async (req, res) => {
 router.put('/timetable', requireAuth, async (req, res) => {
   try {
     const response = await axios.put(`${SCHEDULE_API_URL}/timetable`, req.body, {
-      headers: { Authorization: req.headers.authorization || '' },
+      headers: { Authorization: `Bearer ${req.cookies.auth_token}` },
       timeout: 10000,
     });
     res.status(response.status).send(response.data || '');
@@ -103,7 +104,7 @@ router.put('/timetable', requireAuth, async (req, res) => {
 router.patch('/timetable/:id', requireAuth, async (req, res) => {
   try {
     const response = await axios.patch(`${SCHEDULE_API_URL}/timetable/${req.params.id}`, req.body, {
-      headers: { Authorization: req.headers.authorization || '' },
+      headers: { Authorization: `Bearer ${req.cookies.auth_token}` },
       timeout: 10000,
     });
     res.status(response.status).send(response.data || '');
@@ -122,7 +123,7 @@ router.patch('/timetable/:id', requireAuth, async (req, res) => {
 router.delete('/timetable/:id', requireAuth, async (req, res) => {
   try {
     const response = await axios.delete(`${SCHEDULE_API_URL}/timetable/${req.params.id}`, {
-      headers: { Authorization: req.headers.authorization || '' },
+      headers: { Authorization: `Bearer ${req.cookies.auth_token}` },
       timeout: 10000,
     });
     res.status(response.status).send(response.data || '');
@@ -141,7 +142,7 @@ router.delete('/timetable/:id', requireAuth, async (req, res) => {
 router.delete('/timetable', requireAuth, async (req, res) => {
   try {
     const response = await axios.delete(`${SCHEDULE_API_URL}/timetable`, {
-      headers: { Authorization: req.headers.authorization || '' },
+      headers: { Authorization: `Bearer ${req.cookies.auth_token}` },
       timeout: 10000,
     });
     res.status(response.status).send(response.data || '');

@@ -4,7 +4,7 @@ import ClassBlock from "./ClassBlock";
 import GroupSelector from "./GroupSelector";
 import { BlockData, getGridSnappedPosition, updateBlockPosition, removeBlock, recalculateBlockPostions, recalculateBlockSubrows, sortBlocksByPlacement } from "../utils/ClassBlockUtils";
 import { recalculateOccupiedCells, GridProps, isBinArea, getCellIndex, getCellPosition, getRowHeightsFromOccupiedCells } from "../utils/TimeGridUtils";
-import { clearSavedJsonRoot, saveBlocksAsJson, saveBlocksAsJsonForGroup, jsonToBlockData } from "../utils/JsonUtils";
+import { clearSavedJsonRoot, saveBlocksAsJson, saveBlocksAsJsonForGroup, jsonToBlockData, loadJsonRootForGroup } from "../utils/JsonUtils";
 import { getNewBlockPosition, SpawnNewBlock } from "../utils/NewBlockUtils";
 import { isNewBlockPresent } from "../utils/NewBlockUtils";
 import EditBar from "./EditBar";
@@ -34,7 +34,7 @@ import { useScheduleData } from "../hooks/useScheduleData";
 import { useMultiGroupScheduleData } from "../hooks/useMultiGroupScheduleData";
 import { filterClassesForWeek, mapClassesToWeekDisplayRows, refreshScheduledBlocks, buildActiveDates } from "../utils/ScheduleDataUtils";
 import { generatePdf } from "../utils/ExportUtils";
-import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId } from "../utils/GroupManager";
+import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId, clearGroupData } from "../utils/GroupManager";
 import { cloneBlockData } from "../utils/EditBarUtils";
 import { syncTimetableWithServer } from "../utils/TimetableSyncUtils";
 import { useAuth } from "../auth/AuthContext";
@@ -226,21 +226,59 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         setHistoryVersion((previous) => previous + 1);
     };
 
-    // Załaduj grupy z localStorage przy mount
+    // Załaduj grupy z localStorage (i zsynchronizuj z serwerem, jeśli zalogowany)
     useEffect(() => {
-        const selectedIds = getSelectedGroupIds();
-        const activeId = getActiveGroupId();
-
         const loadSelectedGroupNames = async () => {
-            if (selectedIds.length === 0) {
-                setSelectedGroupsState([]);
-                setActiveGroupIdState(null);
-                return;
-            }
+            let selectedIds = getSelectedGroupIds();
+            const activeId = getActiveGroupId();
 
             try {
                 const data = await apiGet<any>('/api/semester/faculties');
                 const weeiaGroups = data?.WEEIA ?? {};
+                
+                let finalSelectedIds = [...selectedIds];
+
+                if (isAuthenticated) {
+                    try {
+                        const { fetchUserTimetable } = await import("../config/timetableApi");
+                        const userTimetable = await fetchUserTimetable();
+                        const userReferences = new Set(
+                            Object.values(userTimetable)
+                                .map((c: any) => c.reference)
+                                .filter(Boolean)
+                        );
+                        console.log("USER REFERENCES:", Array.from(userReferences));
+
+                        // Szukaj grup w WEEIA, które posiadają zajęcia z tymi referencjami
+                        for (const [groupIdStr, groupData] of Object.entries(weeiaGroups)) {
+                            if (!groupData || !Array.isArray((groupData as any).classes)) continue;
+                            const hasClass = (groupData as any).classes.some((c: any) => {
+                                if (userReferences.has(c.reference)) {
+                                    console.log("MATCH FOUND for group", groupIdStr, "ref:", c.reference);
+                                    return true;
+                                }
+                                return false;
+                            });
+                            if (hasClass && !finalSelectedIds.includes(groupIdStr)) {
+                                console.log("ADDING GROUP", groupIdStr);
+                                finalSelectedIds.push(groupIdStr);
+                            }
+                        }
+                        
+                        if (finalSelectedIds.length > selectedIds.length) {
+                            setSelectedGroupIds(finalSelectedIds);
+                            selectedIds = finalSelectedIds;
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch user timetable for group resolution", e);
+                    }
+                }
+
+                if (selectedIds.length === 0) {
+                    setSelectedGroupsState([]);
+                    setActiveGroupIdState(null);
+                    return;
+                }
 
                 const resolvedGroups = selectedIds.map((groupId) => {
                     const groupData = weeiaGroups?.[Number(groupId)];
@@ -258,6 +296,11 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     setActiveGroupIdState(selectedIds[0] ?? null);
                 }
             } catch {
+                if (selectedIds.length === 0) {
+                    setSelectedGroupsState([]);
+                    setActiveGroupIdState(null);
+                    return;
+                }
                 const fallbackGroups = selectedIds.map((groupId) => ({
                     id: groupId,
                     name: `Grupa ${groupId}`,
@@ -273,7 +316,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         };
 
         loadSelectedGroupNames();
-    }, []);
+    }, [isAuthenticated]);
     
     // PDF export dialog state
     const [showPdfDialog, setShowPdfDialog] = useState(false);
@@ -455,7 +498,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         if (originalBlocksRef.current.length === 0) {
             originalBlocksRef.current = blocksWithBin;
         }
-        applyBlocksState(blocksWithBin, { persist: false, recordHistory: false });
+        applyBlocksState(blocksWithBin, { persist: true, recordHistory: false });
     }, [scheduleIsLoading, scheduleClasses, scheduleTerms, scheduleError]);
 
     const applyBlocksState = (nextBlocks: BlockData[], options?: { persist?: boolean; recordHistory?: boolean }) => {
@@ -491,7 +534,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 groupsMap.forEach((blocks, groupId) => saveBlocksAsJsonForGroup(groupId, blocks));
             } else {
                 // Fallback: save for activeGroup or global
-                if (activeGroupId) {
+                if (activeGroupId && isAnonymous) {
                     saveBlocksAsJsonForGroup(activeGroupId, sortedBlocks);
                 } else {
                     saveBlocksAsJson(sortedBlocks);
@@ -739,7 +782,35 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         }
     };
 
-    const handleRemoveGroup = (groupId: string) => {
+    const handleRemoveGroup = async (groupId: string) => {
+        clearGroupData(groupId);
+        
+        let remainingBlocks = blocksData;
+
+        // Jeśli jesteśmy w widoku wielu grup, bloki mają przypisane sourceGroupId
+        if (blocksData.some(b => b.sourceGroupId === groupId)) {
+            remainingBlocks = blocksData.filter(b => b.sourceGroupId !== groupId);
+        } else {
+            // W trybie pojedynczej grupy (lub jeśli sourceGroupId zostało utracone)
+            // musimy ustalić, które zajęcia należą do usuwanej grupy, by je usunąć
+            try {
+                const groupJson = await loadJsonRootForGroup(groupId, isAnonymous);
+                const groupReferences = new Set(groupJson.classes.map(c => c.reference));
+                remainingBlocks = blocksData.filter(b => !groupReferences.has(b.reference));
+            } catch (err) {
+                console.error("Failed to load group to remove:", err);
+            }
+        }
+
+        // Optymistycznie zaktualizuj UI
+        setBlocksData(remainingBlocks);
+
+        // Usuń klasy przypisane do grupy z serwera zanim zaktualizujemy UI,
+        // w przeciwnym razie `singleSchedule` znów je wczyta
+        if (!isAnonymous) {
+            await syncTimetableWithServer(remainingBlocks);
+        }
+
         const updated = selectedGroups.filter(group => group.id !== groupId);
         setSelectedGroupsState(updated);
         setSelectedGroupIds(updated.map((group) => group.id));
