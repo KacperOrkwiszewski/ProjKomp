@@ -27,7 +27,7 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
   const isAnonymous = !isAuthenticated;
 
   useEffect(() => {
-    if (!groupId) {
+    if (!groupId && isAnonymous) {
       setState({
         timetableName: INITIAL_STATE.timetableName,
         classes: [],
@@ -51,20 +51,35 @@ export function useScheduleData(groupId: string | null, gridProps: GridProps) {
             const userTimetable = await fetchUserTimetable();
             const classesArray = Object.entries(userTimetable).map(([uuid, classData]) => ({
               ...classData,
-              reference: uuid
+              reference: classData.reference || uuid
             }));
             
-            jsonRootResponse = {
-              name: "Twój plan",
-              classes: classesArray
-            };
-            termsResponse = await fetch("/terms.json");
+            // If the user hasn't added anything to their custom plan yet, fall back to the selected group
+            if (classesArray.length === 0) {
+              if (groupId) {
+                throw new Error("Custom plan is empty, falling back to group");
+              } else {
+                jsonRootResponse = { name: "Twój plan", classes: [] };
+                termsResponse = await fetch("/terms.json");
+              }
+            } else {
+              jsonRootResponse = {
+                name: "Twój plan",
+                classes: classesArray
+              };
+              termsResponse = await fetch("/terms.json");
+            }
           } catch (err) {
             console.error("Failed to load user customized plan, falling back to group", err);
-            [jsonRootResponse, termsResponse] = await Promise.all([
-              loadJsonRootForGroup(groupId!, isAnonymous),
-              fetch("/terms.json"),
-            ]);
+            if (groupId) {
+              [jsonRootResponse, termsResponse] = await Promise.all([
+                loadJsonRootForGroup(groupId, isAnonymous),
+                fetch("/terms.json"),
+              ]);
+            } else {
+              jsonRootResponse = { name: "Twój plan", classes: [] };
+              termsResponse = await fetch("/terms.json");
+            }
           }
         } else {
           [jsonRootResponse, termsResponse] = await Promise.all([

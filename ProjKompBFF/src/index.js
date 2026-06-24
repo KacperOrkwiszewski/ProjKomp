@@ -2,6 +2,7 @@ require('dotenv').config({ path: '.env.local' });
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 
@@ -13,6 +14,7 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({
   origin: FRONTEND_URL,
   credentials: true,

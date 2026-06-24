@@ -65,6 +65,16 @@ router.get('/callback', async (req, res) => {
       tenantId: resolvedTenantId,
       loginTime: new Date(),
     };
+    // Store the access token for proxied API calls to the backend
+    req.session.accessToken = accessToken;
+
+    // Set the microsoft auth token (id_token) in a cookie for the backend
+    res.cookie('auth_token', tokenResponse.id_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
 
     console.log(`✅ User logged in: ${userInfo.mail || userInfo.userPrincipalName}`);
 
@@ -100,6 +110,7 @@ router.post('/logout', (req, res) => {
         console.error('Session destroy error:', err);
         return res.status(500).json({ error: 'Logout failed' });
       }
+      res.clearCookie('auth_token');
       console.log(`👋 User logged out: ${email}`);
       res.json({ success: true, message: 'Logged out' });
     });

@@ -4,7 +4,7 @@ import ClassBlock from "./ClassBlock";
 import GroupSelector from "./GroupSelector";
 import { BlockData, getGridSnappedPosition, updateBlockPosition, removeBlock, recalculateBlockPostions, recalculateBlockSubrows, sortBlocksByPlacement } from "../utils/ClassBlockUtils";
 import { recalculateOccupiedCells, GridProps, isBinArea, getCellIndex, getCellPosition, getRowHeightsFromOccupiedCells } from "../utils/TimeGridUtils";
-import { clearSavedJsonRoot, saveBlocksAsJson, saveBlocksAsJsonForGroup, jsonToBlockData } from "../utils/JsonUtils";
+import { clearSavedJsonRoot, saveBlocksAsJson, saveBlocksAsJsonForGroup, jsonToBlockData, loadJsonRootForGroup } from "../utils/JsonUtils";
 import { getNewBlockPosition, SpawnNewBlock } from "../utils/NewBlockUtils";
 import { isNewBlockPresent } from "../utils/NewBlockUtils";
 import EditBar from "./EditBar";
@@ -20,21 +20,21 @@ import { Dropdown } from "primereact/dropdown";
 import { InputSwitch } from "primereact/inputswitch";
 import { ThemeMode } from "../utils/ThemeUtils";
 import { AnimatePresence, motion } from "framer-motion";
-import { 
-  blockItemVariants, 
-  blockListVariants, 
-  springTransition,
-  layoutTransitionConfig,
-  rightPanelVariants,
-  binPanelVariants,
-  PANEL_ANIMATE_PRESENCE_MODE,
-  LIST_ANIMATE_PRESENCE_MODE,
+import {
+    blockItemVariants,
+    blockListVariants,
+    springTransition,
+    layoutTransitionConfig,
+    rightPanelVariants,
+    binPanelVariants,
+    PANEL_ANIMATE_PRESENCE_MODE,
+    LIST_ANIMATE_PRESENCE_MODE,
 } from "../utils/MotionUtils";
 import { useScheduleData } from "../hooks/useScheduleData";
 import { useMultiGroupScheduleData } from "../hooks/useMultiGroupScheduleData";
 import { filterClassesForWeek, mapClassesToWeekDisplayRows, refreshScheduledBlocks, buildActiveDates } from "../utils/ScheduleDataUtils";
 import { generatePdf } from "../utils/ExportUtils";
-import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId } from "../utils/GroupManager";
+import { getSelectedGroupIds, setSelectedGroupIds, getActiveGroupId, setActiveGroupId, clearGroupData } from "../utils/GroupManager";
 import { cloneBlockData } from "../utils/EditBarUtils";
 import { syncTimetableWithServer } from "../utils/TimetableSyncUtils";
 import { useAuth } from "../auth/AuthContext";
@@ -43,10 +43,10 @@ import robotImage from "../assets/robot.png";
 import type { GroupInfo } from "./GroupSelector";
 
 type TimetableProps = {
-  gridProps: GridProps;
+    gridProps: GridProps;
     theme: ThemeMode;
-  onEditBarVisibilityChange?: (isVisible: boolean) => void;
-  //todo: add initial blocks data as prop
+    onEditBarVisibilityChange?: (isVisible: boolean) => void;
+    //todo: add initial blocks data as prop
 };
 
 const areNumberArraysEqual = (left: number[], right: number[]) => {
@@ -166,19 +166,19 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         event.preventDefault();
         event.stopPropagation();
         setIsDragOverBin(true);
-      };
-    
-      const handleBinDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    };
+
+    const handleBinDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
         if (event.target === binRef.current) {
-          setIsDragOverBin(false);
+            setIsDragOverBin(false);
         }
-      };
-    
-      const handleBinDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    };
+
+    const handleBinDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
         setIsDragOverBin(false);
-      };
+    };
 
     // Grupy - state
     const [selectedGroups, setSelectedGroupsState] = useState<GroupInfo[]>([]);
@@ -226,21 +226,59 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         setHistoryVersion((previous) => previous + 1);
     };
 
-    // Załaduj grupy z localStorage przy mount
+    // Załaduj grupy z localStorage (i zsynchronizuj z serwerem, jeśli zalogowany)
     useEffect(() => {
-        const selectedIds = getSelectedGroupIds();
-        const activeId = getActiveGroupId();
-
         const loadSelectedGroupNames = async () => {
-            if (selectedIds.length === 0) {
-                setSelectedGroupsState([]);
-                setActiveGroupIdState(null);
-                return;
-            }
+            let selectedIds = getSelectedGroupIds();
+            const activeId = getActiveGroupId();
 
             try {
                 const data = await apiGet<any>('/api/semester/faculties');
                 const weeiaGroups = data?.WEEIA ?? {};
+
+                let finalSelectedIds = [...selectedIds];
+
+                if (isAuthenticated) {
+                    try {
+                        const { fetchUserTimetable } = await import("../config/timetableApi");
+                        const userTimetable = await fetchUserTimetable();
+                        const userReferences = new Set(
+                            Object.values(userTimetable)
+                                .map((c: any) => c.reference)
+                                .filter(Boolean)
+                        );
+                        console.log("USER REFERENCES:", Array.from(userReferences));
+
+                        // Szukaj grup w WEEIA, które posiadają zajęcia z tymi referencjami
+                        for (const [groupIdStr, groupData] of Object.entries(weeiaGroups)) {
+                            if (!groupData || !Array.isArray((groupData as any).classes)) continue;
+                            const hasClass = (groupData as any).classes.some((c: any) => {
+                                if (userReferences.has(c.reference)) {
+                                    console.log("MATCH FOUND for group", groupIdStr, "ref:", c.reference);
+                                    return true;
+                                }
+                                return false;
+                            });
+                            if (hasClass && !finalSelectedIds.includes(groupIdStr)) {
+                                console.log("ADDING GROUP", groupIdStr);
+                                finalSelectedIds.push(groupIdStr);
+                            }
+                        }
+
+                        if (finalSelectedIds.length > selectedIds.length) {
+                            setSelectedGroupIds(finalSelectedIds);
+                            selectedIds = finalSelectedIds;
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch user timetable for group resolution", e);
+                    }
+                }
+
+                if (selectedIds.length === 0) {
+                    setSelectedGroupsState([]);
+                    setActiveGroupIdState(null);
+                    return;
+                }
 
                 const resolvedGroups = selectedIds.map((groupId) => {
                     const groupData = weeiaGroups?.[Number(groupId)];
@@ -258,6 +296,11 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                     setActiveGroupIdState(selectedIds[0] ?? null);
                 }
             } catch {
+                if (selectedIds.length === 0) {
+                    setSelectedGroupsState([]);
+                    setActiveGroupIdState(null);
+                    return;
+                }
                 const fallbackGroups = selectedIds.map((groupId) => ({
                     id: groupId,
                     name: `Grupa ${groupId}`,
@@ -273,8 +316,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         };
 
         loadSelectedGroupNames();
-    }, []);
-    
+    }, [isAuthenticated]);
+
     // PDF export dialog state
     const [showPdfDialog, setShowPdfDialog] = useState(false);
     const [pdfSource, setPdfSource] = useState<"week" | "edit">("week");
@@ -297,17 +340,17 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
     const currentGridProps = useMemo(() => buildCurrentGridProps(gridProps, rowHeights), [gridProps, rowHeights]);
     const responsiveGridProps = useMemo(() => ({
         ...currentGridProps,
-        StartPoint:{
-            x:  5 * parseFloat(getComputedStyle(document.documentElement).fontSize),
+        StartPoint: {
+            x: 5 * parseFloat(getComputedStyle(document.documentElement).fontSize),
             y: currentGridProps.StartPoint.y
         },
         gridWidth: responsiveGridWidth,
         Bin: {
             ...currentGridProps.Bin,
             StartPoint: {
-                x: responsiveGridWidth/5,
+                x: responsiveGridWidth / 5,
 
-                y: rowHeights.reduce((sum, h) => sum + h, 0) *cellSize.y + cellSize.y + remToPx(2),
+                y: rowHeights.reduce((sum, h) => sum + h, 0) * cellSize.y + cellSize.y + remToPx(2),
             },
         },
     }), [currentGridProps, responsiveGridWidth]);
@@ -455,7 +498,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         if (originalBlocksRef.current.length === 0) {
             originalBlocksRef.current = blocksWithBin;
         }
-        applyBlocksState(blocksWithBin, { persist: false, recordHistory: false });
+        applyBlocksState(blocksWithBin, { persist: true, recordHistory: false });
     }, [scheduleIsLoading, scheduleClasses, scheduleTerms, scheduleError]);
 
     const applyBlocksState = (nextBlocks: BlockData[], options?: { persist?: boolean; recordHistory?: boolean }) => {
@@ -491,13 +534,13 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
                 groupsMap.forEach((blocks, groupId) => saveBlocksAsJsonForGroup(groupId, blocks));
             } else {
                 // Fallback: save for activeGroup or global
-                if (activeGroupId) {
+                if (activeGroupId && isAnonymous) {
                     saveBlocksAsJsonForGroup(activeGroupId, sortedBlocks);
                 } else {
                     saveBlocksAsJson(sortedBlocks);
                 }
             }
-            
+
             // Synchronizacja z serwerem dla zalogowanych użytkowników
             if (!isAnonymous) {
                 syncTimetableWithServer(sortedBlocks).catch(err => {
@@ -511,13 +554,13 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
     const handleEditBlock = (updatedBlock: BlockData, options?: { silent?: boolean }) => {
         const currentBlocks = blocksDataRef.current;
-        
+
         // Recalculate activeDates when terms change so week view reflects edits
-            const blockWithUpdatedDates = {
-                ...updatedBlock,
+        const blockWithUpdatedDates = {
+            ...updatedBlock,
             activeDates: buildActiveDates(updatedBlock.terms, updatedBlock.row, scheduleTerms),
-            };
-        
+        };
+
         const nextBlocks = sortBlocksByPlacement(
             currentBlocks.map(b => (b.id === blockWithUpdatedDates.id ? blockWithUpdatedDates : b))
         );
@@ -573,7 +616,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         clearSavedJsonRoot();
         window.location.reload();
     };
-    const handleUndo= () => {
+    const handleUndo = () => {
         const history = getHistoryStacks(historyGroupKey);
         const previousState = history.past.pop();
 
@@ -598,7 +641,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             life: 1200,
         });
     };
-    const handleRedo= () => {
+    const handleRedo = () => {
         const history = getHistoryStacks(historyGroupKey);
         const nextState = history.future.pop();
 
@@ -676,21 +719,20 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [handleDeleteRequest, handleRedo, handleUndo, isEditModeEnabled, selectedBlockId]);
-  
+
     const handlePromptSubmit = async () => {
         if (!promptText.trim() || isPromptLoading) return;
         setIsPromptLoading(true);
         try {
-            const response = await apiPost<any>('/api/timetable/prompt', { prompt: promptText });
-            
-            if (response && Array.isArray(response.classes)) {
-                const newClasses = refreshScheduledBlocks(
-                    response.classes.map((jsonItem: any, index: number) => ({
-                        ...jsonToBlockData(jsonItem, responsiveGridProps),
-                        id: index,
-                    })),
-                    scheduleTerms,
-                );
+            const response = await apiPost<any>('/api/timetable/prompt', { prompt: promptText }, { timeout: 60000 });
+
+            if (response && typeof response === 'object' && !response.error) {
+                const classArray = Object.entries(response).map(([uuid, jsonItem]: [string, any], index: number) => ({
+                    ...jsonToBlockData(jsonItem, responsiveGridProps),
+                    id: index,
+                    originalUuid: uuid
+                }));
+                const newClasses = refreshScheduledBlocks(classArray, scheduleTerms);
                 const blocksWithBin = SpawnNewBlock(newClasses, responsiveGridProps.Bin);
                 applyBlocksState(blocksWithBin, { persist: true });
                 setPromptText("");
@@ -739,7 +781,35 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         }
     };
 
-    const handleRemoveGroup = (groupId: string) => {
+    const handleRemoveGroup = async (groupId: string) => {
+        clearGroupData(groupId);
+
+        let remainingBlocks = blocksData;
+
+        // Jeśli jesteśmy w widoku wielu grup, bloki mają przypisane sourceGroupId
+        if (blocksData.some(b => b.sourceGroupId === groupId)) {
+            remainingBlocks = blocksData.filter(b => b.sourceGroupId !== groupId);
+        } else {
+            // W trybie pojedynczej grupy (lub jeśli sourceGroupId zostało utracone)
+            // musimy ustalić, które zajęcia należą do usuwanej grupy, by je usunąć
+            try {
+                const groupJson = await loadJsonRootForGroup(groupId, isAnonymous);
+                const groupReferences = new Set(groupJson.classes.map(c => c.reference));
+                remainingBlocks = blocksData.filter(b => !groupReferences.has(b.reference));
+            } catch (err) {
+                console.error("Failed to load group to remove:", err);
+            }
+        }
+
+        // Optymistycznie zaktualizuj UI
+        setBlocksData(remainingBlocks);
+
+        // Usuń klasy przypisane do grupy z serwera zanim zaktualizujemy UI,
+        // w przeciwnym razie `singleSchedule` znów je wczyta
+        if (!isAnonymous) {
+            await syncTimetableWithServer(remainingBlocks);
+        }
+
         const updated = selectedGroups.filter(group => group.id !== groupId);
         setSelectedGroupsState(updated);
         setSelectedGroupIds(updated.map((group) => group.id));
@@ -761,7 +831,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
     const handleDownloadPdf = async () => {
         let blocksToExport: BlockData[];
-        
+
         if (pdfSource === "edit") {
             // Use all blocks from edit mode
             blocksToExport = blocksData.filter((block) => block.col >= 0 && block.row >= 0);
@@ -811,14 +881,14 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             return;
         }
         if (originalBlock.col == -1) {
-                    toast.current?.show({
-                        severity: "warn",
-                        summary: "Nie można przywrócić bloku",
-                        detail: `Blok #${blockId} jest nowym blokiem`,
-                        life: 1500,
-                    });
-                    return;
-                }
+            toast.current?.show({
+                severity: "warn",
+                summary: "Nie można przywrócić bloku",
+                detail: `Blok #${blockId} jest nowym blokiem`,
+                life: 1500,
+            });
+            return;
+        }
 
         const nextBlocks = sortBlocksByPlacement(
             blocksDataRef.current.map((block) => (block.id === blockId ? originalBlock : block))
@@ -843,7 +913,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
         const block = blocksDataRef.current.find(b => b.id === blockId);
         if (!block) return;
-        if ((block.col == -1 || block.row == -1)){
+        if ((block.col == -1 || block.row == -1)) {
             return
         }
 
@@ -864,7 +934,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         setSelectedBlockId(null);
     };
 
-    const handleBlockDrop = (blockId: number, newX: number, newY: number, hourSpan: number, dragGridProps: GridProps = responsiveGridProps,cursorX:number,cursorY:number) => {
+    const handleBlockDrop = (blockId: number, newX: number, newY: number, hourSpan: number, dragGridProps: GridProps = responsiveGridProps, cursorX: number, cursorY: number) => {
         if (!isEditModeEnabled) {
             return { x: newX, y: newY };
         }
@@ -893,8 +963,8 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
         const gridRect = boardRef.current?.getBoundingClientRect();
 
         if (binRect && gridRect) {
-            console.log('binbin binrect',binRect.left,binRect.top,binRect.bottom,binRect.right)
-            console.log('binbin cursor',cursorX,cursorY)
+            console.log('binbin binrect', binRect.left, binRect.top, binRect.bottom, binRect.right)
+            console.log('binbin cursor', cursorX, cursorY)
             const isInsideBin =
                 cursorX >= binRect.left &&
                 cursorX <= binRect.right &&
@@ -929,7 +999,7 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             return getCellPosition(currentBlock.row, currentBlock.col, dragGridProps);
         }
         targetIndex.col = snappedCol
-        const snappedPos = getGridSnappedPosition(newX, newY + cellSize.y/2, hourSpan, dragGridProps);
+        const snappedPos = getGridSnappedPosition(newX, newY + cellSize.y / 2, hourSpan, dragGridProps);
         console.log('cell index im problem :)')
         const newBlocksData = updateBlockPosition(blocksDataRef.current, blockId, targetIndex).map((block) => {
             if (block.id !== blockId) {
@@ -942,12 +1012,12 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
             };
         });
         let recalculatedBlocks = sortBlocksByPlacement(newBlocksData);
-        if(!isNewBlockPresent(recalculatedBlocks)){
-            recalculatedBlocks = SpawnNewBlock(recalculatedBlocks,dragGridProps.Bin);
+        if (!isNewBlockPresent(recalculatedBlocks)) {
+            recalculatedBlocks = SpawnNewBlock(recalculatedBlocks, dragGridProps.Bin);
             recalculatedBlocks = recalculateBlockPostions(recalculatedBlocks, dragGridProps);
         }
         applyBlocksState(recalculatedBlocks);
-        
+
         setSelectedBlockId(blockId);
         return snappedPos;
     }
@@ -956,311 +1026,312 @@ const Timetable: React.FC<TimetableProps> = ({ gridProps, theme, onEditBarVisibi
 
     return (
         <div className="tt-layout" style={{ position: "relative" }}>
-        <ConfirmDialog />
-        <Toast ref={toast} position="top-right" />
+            <ConfirmDialog />
+            <Toast ref={toast} position="top-right" />
 
-        <motion.div 
-          layout 
-          transition={layoutTransitionConfig} 
-          className={`tt-surface ${selectedBlockId !== null ? "tt-surface--editbar-open" : "tt-surface--editbar-hidden"}`}
-        >
-                    <motion.section
-                        layout
-                        transition={layoutTransitionConfig}
-                        className="tt-left-panel"
-                    >
-                <div className="tt-prompt-row">
-                    <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
-                    <InputText 
-                        placeholder="Wpisz prompt" 
-                        className="tt-prompt-input" 
-                        value={promptText}
-                        onChange={(e) => setPromptText(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') handlePromptSubmit();
-                        }}
-                        disabled={isPromptLoading}
-                    />
-                    <Button 
-                        icon={isPromptLoading ? "pi pi-spin pi-spinner" : "pi pi-send"} 
-                        rounded 
-                        text 
-                        className="tt-icon-btn" 
-                        onClick={handlePromptSubmit}
-                        disabled={isPromptLoading}
-                    />
-                </div>
-
-                <div className="tt-plan-row">
-                    <span>tryb edycji</span>
-                    <label className="tt-mail-toggle" aria-label="Tryb edycji">
-                        <input
-                            type="checkbox"
-                            checked={isEditModeEnabled}
-                            onChange={(event) => {
-                                const wants = event.target.checked;
-                                setIsEditModeEnabled(wants);
-
-                                if (wants) {
-                                    // entering edit mode: clear previously selected subject
-                                    setEditingSubject(null);
-                                    if (selectedGroupIds.length > 1) {
-                                        toast.current?.show({
-                                            severity: "info",
-                                            summary: "Wybierz przedmiot",
-                                            detail: "Kliknij blok, by wybrać przedmiot do edycji.",
-                                            life: 2500,
-                                        });
-                                    }
-                                }
-                            }}
-                        />
-                        <span className="tt-mail-toggle-track" aria-hidden="true">
-                            <span className="tt-mail-toggle-thumb" />
-                        </span>
-                    </label>
-                </div>
-
-                <div className="tt-plan-row">
-                    <span>powiadomienia e-mail</span>
-                    <label className="tt-mail-toggle" aria-label="Powiadomienia e-mail">
-                        <input
-                            type="checkbox"
-                            checked={emailNotificationsEnabled}
-                            onChange={(event) => setEmailNotificationsEnabled(event.target.checked)}
-                        />
-                        <span className="tt-mail-toggle-track" aria-hidden="true">
-                            <span className="tt-mail-toggle-thumb" />
-                        </span>
-                    </label>
-                </div>
-
-                <div className="tt-plan-row tt-plan-tags-row">
-                    <span>plany:</span>
-                    {selectedGroups.map((group) => (
-                        <span 
-                            key={group.id} 
-                            className={`tt-plan-chip ${activeGroupId === group.id ? "tt-plan-chip--active" : ""}`}
-                            onClick={() => handleSwitchGroup(group.id)}
-                        >
-                            {group.name}
-                            <button 
-                                className="tt-chip-close-btn" 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveGroup(group.id);
-                                }}
-                                aria-label={`Usuń grupę ${group.name}`}
-                            >
-                                ×
-                            </button>
-                        </span>
-                    ))}
-                    <Button 
-                        icon="pi pi-plus" 
-                        text 
-                        rounded 
-                        className="add-group-button" 
-                        onClick={() => setShowGroupSelector(true)}
-                    />
-                    <div className="tt-plan-row-spacer" />
-                    {isEditModeEnabled && (
-                    <div className="buttones">
-                    <Button icon="pi pi-arrow-left" rounded outlined className="tt-icon-btn tt-undo-btn" onClick={handleUndo} disabled={!canUndo} />
-                    <Button icon="pi pi-arrow-right" rounded outlined className="tt-icon-btn tt-redo-btn" onClick={handleRedo} disabled={!canRedo} />
-                    <Button icon="pi pi-refresh" rounded outlined className="tt-icon-btn tt-refresh-btn" onClick={handleReloadData} />
-                    </div>)}
-                </div>
-
-                <motion.div
-                    ref={boardRef}
+            <motion.div
+                layout
+                transition={layoutTransitionConfig}
+                className={`tt-surface ${selectedBlockId !== null ? "tt-surface--editbar-open" : "tt-surface--editbar-hidden"}`}
+            >
+                <motion.section
                     layout
                     transition={layoutTransitionConfig}
-                    className={`tt-board ${isEditModeEnabled ? "tt-board--edit-mode" : ""}`}
-                    style={{ position: "relative", width: "100%", minWidth: 0 }}
+                    className="tt-left-panel"
                 >
-                    
-                    <TimetableGrid
-                        rows={rows}
-                        cols={cols}
-                        gridHeight={gridHeight}
-                        gridWidth={responsiveGridProps.gridWidth}
-                        rowHeights={rowHeights}
-                        StartPoint={responsiveGridProps.StartPoint}
-                        Bin={responsiveGridProps.Bin}
-                        showBin={isEditModeEnabled}
-                        dayLabels={isEditModeEnabled ? [] : dayLabels}
-                    />
+                    <div className="tt-prompt-row">
+                        <img src={robotImage} className="tt-prompt-robot" alt="Robot" />
+                        <InputText
+                            placeholder="Wpisz prompt"
+                            className="tt-prompt-input"
+                            value={promptText}
+                            onChange={(e) => setPromptText(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handlePromptSubmit();
+                            }}
+                            disabled={isPromptLoading}
+                        />
+                        <Button
+                            icon={isPromptLoading ? "pi pi-spin pi-spinner" : "pi pi-send"}
+                            rounded
+                            text
+                            className="tt-icon-btn"
+                            onClick={handlePromptSubmit}
+                            disabled={isPromptLoading}
+                        />
+                    </div>
+
+                    <div className="tt-plan-row">
+                        <span>tryb edycji</span>
+                        <label className="tt-mail-toggle" aria-label="Tryb edycji">
+                            <input
+                                type="checkbox"
+                                checked={isEditModeEnabled}
+                                onChange={(event) => {
+                                    const wants = event.target.checked;
+                                    setIsEditModeEnabled(wants);
+
+                                    if (wants) {
+                                        // entering edit mode: clear previously selected subject
+                                        setEditingSubject(null);
+                                        if (selectedGroupIds.length > 1) {
+                                            toast.current?.show({
+                                                severity: "info",
+                                                summary: "Wybierz przedmiot",
+                                                detail: "Kliknij blok, by wybrać przedmiot do edycji.",
+                                                life: 2500,
+                                            });
+                                        }
+                                    }
+                                }}
+                            />
+                            <span className="tt-mail-toggle-track" aria-hidden="true">
+                                <span className="tt-mail-toggle-thumb" />
+                            </span>
+                        </label>
+                    </div>
+
+                    <div className="tt-plan-row">
+                        <span>powiadomienia e-mail</span>
+                        <label className="tt-mail-toggle" aria-label="Powiadomienia e-mail">
+                            <input
+                                type="checkbox"
+                                checked={emailNotificationsEnabled}
+                                onChange={(event) => setEmailNotificationsEnabled(event.target.checked)}
+                            />
+                            <span className="tt-mail-toggle-track" aria-hidden="true">
+                                <span className="tt-mail-toggle-thumb" />
+                            </span>
+                        </label>
+                    </div>
+
+                    <div className="tt-plan-row tt-plan-tags-row">
+                        <span>plany:</span>
+                        {selectedGroups.map((group) => (
+                            <span
+                                key={group.id}
+                                className={`tt-plan-chip ${activeGroupId === group.id ? "tt-plan-chip--active" : ""}`}
+                                onClick={() => handleSwitchGroup(group.id)}
+                            >
+                                {group.name}
+                                <button
+                                    className="tt-chip-close-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveGroup(group.id);
+                                    }}
+                                    aria-label={`Usuń grupę ${group.name}`}
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                        <Button
+                            icon="pi pi-plus"
+                            text
+                            rounded
+                            className="add-group-button"
+                            onClick={() => setShowGroupSelector(true)}
+                        />
+                        <div className="tt-plan-row-spacer" />
+                        {isEditModeEnabled && (
+                            <div className="buttones">
+                                <Button icon="pi pi-arrow-left" rounded outlined className="tt-icon-btn tt-undo-btn" onClick={handleUndo} disabled={!canUndo} />
+                                <Button icon="pi pi-arrow-right" rounded outlined className="tt-icon-btn tt-redo-btn" onClick={handleRedo} disabled={!canRedo} />
+                                <Button icon="pi pi-refresh" rounded outlined className="tt-icon-btn tt-refresh-btn" onClick={handleReloadData} />
+                            </div>)}
+                    </div>
+
                     <motion.div
-                        className="tt-block-layer"
-                        variants={blockListVariants}
-                        initial={false}
-                        animate="animate"
+                        ref={boardRef}
+                        layout
+                        transition={layoutTransitionConfig}
+                        className={`tt-board ${isEditModeEnabled ? "tt-board--edit-mode" : ""}`}
+                        style={{ position: "relative", width: "100%", minWidth: 0 }}
                     >
-                        <AnimatePresence mode={LIST_ANIMATE_PRESENCE_MODE} initial={false}>
-                            {visibleBlocks.map((block) => {
-                                const isNewClassBlock = block.col === -1 && block.row === -1;
 
-                                if (isNewClassBlock && !isEditModeEnabled) {
-                                    return null;
-                                }
+                        <TimetableGrid
+                            rows={rows}
+                            cols={cols}
+                            gridHeight={gridHeight}
+                            gridWidth={responsiveGridProps.gridWidth}
+                            rowHeights={rowHeights}
+                            StartPoint={responsiveGridProps.StartPoint}
+                            Bin={responsiveGridProps.Bin}
+                            showBin={isEditModeEnabled}
+                            dayLabels={isEditModeEnabled ? [] : dayLabels}
+                        />
+                        <motion.div
+                            className="tt-block-layer"
+                            variants={blockListVariants}
+                            initial={false}
+                            animate="animate"
+                        >
+                            <AnimatePresence mode={LIST_ANIMATE_PRESENCE_MODE} initial={false}>
+                                {visibleBlocks.map((block) => {
+                                    const isNewClassBlock = block.col === -1 && block.row === -1;
 
-                                return (
-                                    <ClassBlock
-                                        gridProps={responsiveGridProps}
-                                        handlePickup={handleBlockPickup}
-                                        handleDrop={handleBlockDrop}
-                                        isEditModeEnabled={isEditModeEnabled}
-                                        key={block.id}
-                                        theme={theme}
-                                        blockData={block}
-                                        variants={blockItemVariants}
-                                    />
-                                );
-                            })}
-                            
-                        
-                        </AnimatePresence>
+                                    if (isNewClassBlock && !isEditModeEnabled) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <ClassBlock
+                                            gridProps={responsiveGridProps}
+                                            handlePickup={handleBlockPickup}
+                                            handleDrop={handleBlockDrop}
+                                            isEditModeEnabled={isEditModeEnabled}
+                                            key={block.id}
+                                            theme={theme}
+                                            blockData={block}
+                                            variants={blockItemVariants}
+                                        />
+                                    );
+                                })}
+
+
+                            </AnimatePresence>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
 
-                
-                {!isEditModeEnabled && (
-                    <div className="tt-bottom-row">
-                        <div className="tt-bottom-nav">
-                            <Button icon="pi pi-chevron-left" rounded outlined className="tt-nav-btn" aria-label="Poprzedni tydzień" onClick={handlePreviousWeek} />
-                            <span className="tt-date-pill">{getWeekRangeString(currentDate)}</span>
-                            <Button icon="pi pi-chevron-right" rounded outlined className="tt-nav-btn" aria-label="Następny tydzień" onClick={handleNextWeek} />
+
+                    {!isEditModeEnabled && (
+                        <div className="tt-bottom-row">
+                            <div className="tt-bottom-nav">
+                                <Button icon="pi pi-chevron-left" rounded outlined className="tt-nav-btn" aria-label="Poprzedni tydzień" onClick={handlePreviousWeek} />
+                                <span className="tt-date-pill">{getWeekRangeString(currentDate)}</span>
+                                <Button icon="pi pi-chevron-right" rounded outlined className="tt-nav-btn" aria-label="Następny tydzień" onClick={handleNextWeek} />
+                            </div>
+
+                            <Button label="pobierz pdf" icon="pi pi-download" className="tt-download-btn" onClick={() => setShowPdfDialog(true)} />
+                        </div>
+                    )}
+                    {isEditModeEnabled && (
+                        <div className="tt-bin-wrapper">
+                            <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
+                                <motion.div
+                                    layout
+                                    variants={binPanelVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    exit="exit"
+                                    ref={binRef}
+                                    className={`editbar-bin ${isDragOverBin ? "is-drag-over" : ""}`.trim()}
+                                    onDragOver={handleBinDragOver}
+                                    onDragLeave={handleBinDragLeave}
+                                    onDrop={handleBinDrop}
+                                    style={{
+                                        height: `${cellSize.y + remToPx(2)}px`,
+                                        width: `${responsiveGridProps.gridWidth / 3}px`,
+                                    }}
+                                >
+                                    <i className="pi pi-trash editbar-bin-icon"></i>
+                                    <span className="editbar-bin-title">Kosz</span>
+                                    <span className="editbar-bin-subtitle">upuść blok, aby usunąć</span>
+                                </motion.div>
+
+                            </AnimatePresence>
+
+                        </div>
+                    )}
+                    {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
+                    {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
+                </motion.section>
+
+
+
+                <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
+                    {isEditModeEnabled && (
+                        <motion.aside
+                            layout
+                            variants={rightPanelVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            style={{ originX: 1, originY: 0.5 }}
+                            className="tt-right-panel"
+                        >
+                            <EditBar
+                                blockData={selectedBlock}
+                                onSave={handleEditBlock}
+                                onHide={handleHideEditBar}
+                                onRestoreFromDisk={handleRestoreBlockFromDisk}
+                            />
+                        </motion.aside>
+                    )}
+                </AnimatePresence>
+
+                <GroupSelector
+                    visible={showGroupSelector}
+                    onHide={() => setShowGroupSelector(false)}
+                    onGroupsSelected={handleAddGroups}
+                    selectedGroupIds={selectedGroupIds}
+                />
+
+                <Dialog
+                    header="Eksportuj do PDF"
+                    visible={showPdfDialog}
+                    onHide={() => setShowPdfDialog(false)}
+                    className="pdf-export-modal"
+                    maskClassName="pdf-export-modal-mask"
+                    modal
+                >
+                    <div className="pdf-export-dialog">
+                        <div className="pdf-export-field">
+                            <label>Źródło danych:</label>
+                            <Dropdown
+                                value={pdfSource}
+                                options={[
+                                    { label: "Bieżący tydzień", value: "week" },
+                                    { label: "Tryb edycji (cały plan)", value: "edit" }
+                                ]}
+                                onChange={(e) => setPdfSource(e.value)}
+                                placeholder="Wybierz źródło"
+                                panelClassName="pdf-export-dropdown-panel"
+                            />
                         </div>
 
-                        <Button label="pobierz pdf" icon="pi pi-download" className="tt-download-btn" onClick={() => setShowPdfDialog(true)} />
-                    </div>
-                )}
-                {isEditModeEnabled && (
-                            <div className="tt-bin-wrapper">
-                    <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
-                    <motion.div
-                        layout
-                        variants={binPanelVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        ref={binRef}
-                        className={`editbar-bin ${isDragOverBin ? "is-drag-over" : ""}`.trim()}
-                        onDragOver={handleBinDragOver}
-                        onDragLeave={handleBinDragLeave}
-                        onDrop={handleBinDrop}
-                        style={{ height: `${cellSize.y + remToPx(2)}px`,
-                                width: `${responsiveGridProps.gridWidth/3}px`,
-                                }}
-                    >
-                        <i className="pi pi-trash editbar-bin-icon"></i>
-                        <span className="editbar-bin-title">Kosz</span>
-                        <span className="editbar-bin-subtitle">upuść blok, aby usunąć</span>
-                    </motion.div>
-                    
-                    </AnimatePresence>
-                    
-                    </div>
-                )}
-                {isEditModeEnabled && <div className="tt-active-count">Aktywne bloki: {placedBlocksCount}</div>}
-                    {scheduleError && <div className="tt-active-count">Błąd danych: {scheduleError}</div>}
-            </motion.section>
-            
-                    
+                        <div className="pdf-export-field">
+                            <label>Nagłówek:</label>
+                            <InputText
+                                value={pdfCaption}
+                                onChange={(e) => setPdfCaption(e.target.value)}
+                                placeholder="Wpisz nagłówek"
+                            />
+                        </div>
 
-            <AnimatePresence initial={false} mode={PANEL_ANIMATE_PRESENCE_MODE}>
-                {isEditModeEnabled && (
-                    <motion.aside
-                        layout
-                        variants={rightPanelVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        style={{ originX: 1, originY: 0.5 }}
-                        className="tt-right-panel"
-                    >
-                        <EditBar
-                            blockData={selectedBlock}
-                            onSave={handleEditBlock}
-                            onHide={handleHideEditBar}
-                            onRestoreFromDisk={handleRestoreBlockFromDisk}
-                        />
-                    </motion.aside>
-                )}
-            </AnimatePresence>
+                        <div className="pdf-export-field">
+                            <label>Tryb ciemny:</label>
+                            <InputSwitch
+                                checked={pdfDarkMode}
+                                onChange={(e) => setPdfDarkMode(e.value)}
+                            />
+                        </div>
 
-            <GroupSelector
-                visible={showGroupSelector}
-                onHide={() => setShowGroupSelector(false)}
-                onGroupsSelected={handleAddGroups}
-                selectedGroupIds={selectedGroupIds}
-            />
+                        <div className="pdf-export-field">
+                            <label>Cały tydzień (7 dni):</label>
+                            <InputSwitch
+                                checked={pdfFullWeek}
+                                onChange={(e) => setPdfFullWeek(e.value)}
+                            />
+                        </div>
 
-            <Dialog
-                header="Eksportuj do PDF"
-                visible={showPdfDialog}
-                onHide={() => setShowPdfDialog(false)}
-                className="pdf-export-modal"
-                maskClassName="pdf-export-modal-mask"
-                modal
-            >
-                <div className="pdf-export-dialog">
-                    <div className="pdf-export-field">
-                        <label>Źródło danych:</label>
-                        <Dropdown
-                            value={pdfSource}
-                            options={[
-                                { label: "Bieżący tydzień", value: "week" },
-                                { label: "Tryb edycji (cały plan)", value: "edit" }
-                            ]}
-                            onChange={(e) => setPdfSource(e.value)}
-                            placeholder="Wybierz źródło"
-                            panelClassName="pdf-export-dropdown-panel"
-                        />
+                        <div className="pdf-export-actions">
+                            <Button
+                                label="Pobierz PDF"
+                                icon="pi pi-download"
+                                onClick={handleDownloadPdf}
+                            />
+                            <Button
+                                label="Anuluj"
+                                icon="pi pi-times"
+                                className="p-button-secondary"
+                                onClick={() => setShowPdfDialog(false)}
+                            />
+                        </div>
                     </div>
-
-                    <div className="pdf-export-field">
-                        <label>Nagłówek:</label>
-                        <InputText
-                            value={pdfCaption}
-                            onChange={(e) => setPdfCaption(e.target.value)}
-                            placeholder="Wpisz nagłówek"
-                        />
-                    </div>
-
-                    <div className="pdf-export-field">
-                        <label>Tryb ciemny:</label>
-                        <InputSwitch
-                            checked={pdfDarkMode}
-                            onChange={(e) => setPdfDarkMode(e.value)}
-                        />
-                    </div>
-
-                    <div className="pdf-export-field">
-                        <label>Cały tydzień (7 dni):</label>
-                        <InputSwitch
-                            checked={pdfFullWeek}
-                            onChange={(e) => setPdfFullWeek(e.value)}
-                        />
-                    </div>
-
-                    <div className="pdf-export-actions">
-                        <Button
-                            label="Pobierz PDF"
-                            icon="pi pi-download"
-                            onClick={handleDownloadPdf}
-                        />
-                        <Button
-                            label="Anuluj"
-                            icon="pi pi-times"
-                            className="p-button-secondary"
-                            onClick={() => setShowPdfDialog(false)}
-                        />
-                    </div>
-                </div>
-            </Dialog>
-        </motion.div>
+                </Dialog>
+            </motion.div>
         </div>
     );
 };

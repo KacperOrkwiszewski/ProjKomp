@@ -1,6 +1,6 @@
 import { apiUrl } from '../config/api';
 
-type RequestOptions = RequestInit & {
+export type RequestOptions = RequestInit & {
   timeout?: number;
 };
 
@@ -69,8 +69,8 @@ export async function apiCall(
 /**
  * Convenience wrapper for GET requests
  */
-export async function apiGet<T>(endpoint: string): Promise<T> {
-  const response = await apiCall(endpoint, { method: 'GET' });
+export async function apiGet<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+  const response = await apiCall(endpoint, { method: 'GET', ...options });
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -82,10 +82,11 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
 /**
  * Convenience wrapper for POST requests
  */
-export async function apiPost<T>(endpoint: string, data?: unknown): Promise<T> {
+export async function apiPost<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
   const response = await apiCall(endpoint, {
     method: 'POST',
     body: data ? JSON.stringify(data) : undefined,
+    ...options,
   });
 
   if (!response.ok) {
